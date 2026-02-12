@@ -9,20 +9,18 @@ export function Navbar() {
 
   return (
     <>
-      {/* Logo - Top Left */}
-      <div className="fixed top-6 left-6 z-50">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-accent/50 transition-all">
+      {/* Floating Pill Navbar - logo and links inside */}
+      <nav className="floating-nav w-[calc(100%-2rem)] max-w-5xl px-4 py-3 bg-card/80 border border-border/40 shadow-2xl z-50 transition-all duration-300 flex items-center justify-between gap-4">
+        {/* Logo - inside nav */}
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <div className="w-9 h-9 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-accent/50 transition-all">
             <span className="text-foreground font-display font-bold text-lg">V</span>
           </div>
           <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Vercera</span>
         </Link>
-      </div>
 
-      {/* Floating Pill Navbar */}
-      <nav className="floating-nav px-2 py-3 bg-card/80 border border-border/40 shadow-2xl z-50 transition-all duration-300">
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex flex-1 items-center justify-end gap-1">
           <Link
             href="/"
             className="px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
@@ -75,7 +73,7 @@ export function Navbar() {
 
       {/* Mobile Navigation Menu */}
       {isOpen && (
-        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100%-2rem)] md:hidden">
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100%-2rem)] md:hidden">
           <div className="bg-card/95 backdrop-blur-md border border-border/40 rounded-2xl shadow-2xl p-4 space-y-2">
             <Link
               href="/"
