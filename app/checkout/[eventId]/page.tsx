@@ -253,7 +253,7 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                   <div>
                     <p className="text-foreground/60 text-sm">Email</p>
-                    <p className="font-semibold text-foreground text-sm break-all">{user.email}</p>
+                    <p className="font-semibold text-foreground text-sm break-all">{profile.email}</p>
                   </div>
                 </div>
 
