@@ -10,53 +10,54 @@ export function Navbar() {
   return (
     <>
       {/* Floating Pill Navbar - logo and links inside */}
-      <nav className="floating-nav w-[calc(100%-2rem)] max-w-5xl px-4 py-3 bg-card/80 border border-border/40 shadow-2xl z-50 transition-all duration-300 flex items-center justify-between gap-4">
+      <nav className="floating-nav relative w-[calc(100%-2rem)] max-w-3xl px-3 py-2.5 bg-card/80 border border-border/40 shadow-2xl z-50 transition-all duration-300 flex items-center justify-between gap-2">
         {/* Logo - inside nav */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-9 h-9 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-accent/50 transition-all">
+          <div className="w-9 h-9 bg-gradient-to-br from-accent to-primary rounded-[100%] flex items-center justify-center shadow-lg group-hover:shadow-accent/50 transition-all">
             <span className="text-foreground font-display font-bold text-lg">V</span>
           </div>
           <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Vercera</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex flex-1 items-center justify-end gap-1">
+        {/* Desktop - centered links only (Home, Events, Schedule, FAQ) */}
+        <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-0.5">
           <Link
             href="/"
-            className="px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
+            className="px-3 py-1.5 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
           >
             Home
           </Link>
           <Link
             href="/events"
-            className="px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
+            className="px-3 py-1.5 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
           >
             Events
           </Link>
           <Link
             href="/#schedule"
-            className="px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
+            className="px-3 py-1.5 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
           >
             Schedule
           </Link>
           <Link
             href="/#faq"
-            className="px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
+            className="px-3 py-1.5 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-full transition-all text-sm font-medium"
           >
             FAQ
           </Link>
+        </div>
 
-          <div className="w-px h-6 bg-border/40 mx-1"></div>
-
+        {/* Desktop - Login & Sign Up on the right */}
+        <div className="hidden md:flex items-center gap-0.5 shrink-0">
           <Link
             href="/login"
-            className="px-4 py-2 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm"
+            className="px-3 py-1.5 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm"
           >
             Login
           </Link>
           <Link
             href="/signup"
-            className="px-5 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all text-sm font-medium"
+            className="px-4 py-1.5 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all text-sm font-medium"
           >
             Sign Up
           </Link>
