@@ -1,22 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { use, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { events } from '@/lib/events'
 import { ArrowLeft, Clock, MapPin, Users, Trophy, Check } from 'lucide-react'
 
 interface Props {
-  params: {
-    id: string
-  }
+  params: Promise<{ id: string }>
 }
 
 export default function EventDetailPage({ params }: Props) {
   const router = useRouter()
-  const event = events.find((e) => e.id === params.id)
+  const { user } = useAuth()
+  const { id } = use(params)
+  const event = events.find((e) => e.id === id)
   const [isRegistering, setIsRegistering] = useState(false)
 
   if (!event) {
@@ -44,13 +45,9 @@ export default function EventDetailPage({ params }: Props) {
   const spotsAvailable = event.maxParticipants - event.registeredCount
 
   const handleRegisterClick = () => {
-    // Check if user is logged in (this will be improved with auth)
-    const isLoggedIn = localStorage.getItem('userToken')
-
-    if (!isLoggedIn) {
+    if (!user) {
       router.push(`/login?redirect=/events/${event.id}`)
     } else {
-      // Redirect to checkout page
       router.push(`/checkout/${event.id}`)
     }
   }

@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { events } from '@/lib/events'
 import { ArrowLeft, Users, Trophy, Clock, MapPin } from 'lucide-react'
 
 export default function EventsPage() {
+  const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'technical' | 'non-technical'>('all')
 
   const filteredEvents =
@@ -71,8 +73,14 @@ export default function EventsPage() {
           {/* Events Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredEvents.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`}>
-                <div className="bg-card rounded-xl overflow-hidden border border-border/50 hover:border-accent/50 hover:shadow-2xl hover:shadow-accent/20 transition-all duration-300 h-full cursor-pointer group">
+              <div
+                key={event.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push(`/events/${event.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/events/${event.id}`)}
+                className="bg-card rounded-xl overflow-hidden border border-border/50 hover:border-accent/50 hover:shadow-2xl hover:shadow-accent/20 transition-all duration-300 h-full cursor-pointer group"
+              >
                   {/* Image */}
                   <div className="relative w-full h-48 bg-gradient-to-br from-accent/8 to-primary/8">
                     <div className="flex items-center justify-center h-full text-5xl opacity-25 group-hover:scale-110 transition-transform">
@@ -122,13 +130,16 @@ export default function EventsPage() {
                         <p className="text-foreground/60 text-xs">Fee</p>
                         <p className="font-bold text-accent text-lg">₹{event.registrationFee}</p>
                       </div>
-                      <Link href={`/checkout/${event.id}`} className="px-5 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-lg font-semibold hover:shadow-lg hover:shadow-accent/30 transition-all text-sm">
+                      <Link
+                        href={`/checkout/${event.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-5 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-lg font-semibold hover:shadow-lg hover:shadow-accent/30 transition-all text-sm"
+                      >
                         Register
                       </Link>
                     </div>
                   </div>
                 </div>
-              </Link>
             ))}
           </div>
 

@@ -1,26 +1,26 @@
 'use client'
 
-import React from "react"
-
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { collection, addDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { events } from '@/lib/events'
 import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
 
 interface Props {
-  params: {
-    eventId: string
-  }
+  params: Promise<{ eventId: string }>
 }
 
 export default function CheckoutPage({ params }: Props) {
   const router = useRouter()
-  const event = events.find((e) => e.id === params.eventId)
+  const { eventId } = use(params)
+  const event = events.find((e) => e.id === eventId)
+  const { user, profile, loading } = useAuth()
 
-  const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [formData, setFormData] = useState({
@@ -30,20 +30,10 @@ export default function CheckoutPage({ params }: Props) {
   })
 
   useEffect(() => {
-    // Check authentication
-    const userToken = localStorage.getItem('userToken')
-    if (!userToken) {
-      router.push(`/login?redirect=/checkout/${params.eventId}`)
-      return
+    if (!loading && !user) {
+      router.push(`/login?redirect=/checkout/${eventId}`)
     }
-
-    try {
-      const userData = JSON.parse(userToken)
-      setUser(userData)
-    } catch (err) {
-      router.push('/login')
-    }
-  }, [params.eventId, router])
+  }, [user, loading, router, eventId])
 
   if (!event) {
     return (
@@ -72,43 +62,48 @@ export default function CheckoutPage({ params }: Props) {
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user || !profile || !event) return
     setIsLoading(true)
     setPaymentStatus('processing')
 
-    // Simulate Razorpay payment flow
     try {
-      // In production, you would:
-      // 1. Create an order on your backend
-      // 2. Initialize Razorpay checkout
-      // 3. Handle payment verification
-
+      // Simulate Razorpay payment flow - replace with actual Razorpay integration
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // Mock successful payment
-      setPaymentStatus('success')
-
-      // Store registration info
-      const registrations = JSON.parse(localStorage.getItem('registrations') || '[]')
-      registrations.push({
+      await addDoc(collection(db, 'registrations'), {
+        userId: user.uid,
         eventId: event.id,
         eventName: event.name,
         amount: event.registrationFee,
         registrationDate: new Date().toISOString().split('T')[0],
         status: 'paid',
+        teamName: formData.teamName || null,
+        memberEmails: formData.memberEmails || null,
+        additionalInfo: formData.additionalInfo || null,
+        createdAt: new Date().toISOString(),
       })
-      localStorage.setItem('registrations', JSON.stringify(registrations))
+
+      setPaymentStatus('success')
 
       setTimeout(() => {
         router.push('/dashboard')
       }, 2000)
-    } catch (error) {
+    } catch {
       setPaymentStatus('failed')
       setIsLoading(false)
     }
   }
 
-  if (!user) {
-    return null
+  if (!user || !profile) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-32 pb-20 flex items-center justify-center">
+          <p className="text-foreground/60">Loading...</p>
+        </div>
+        <Footer />
+      </main>
+    )
   }
 
   return (
@@ -254,11 +249,11 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                   <div>
                     <p className="text-foreground/60 text-sm">Participant</p>
-                    <p className="font-semibold text-foreground">{user.fullName}</p>
+                    <p className="font-semibold text-foreground">{profile.fullName}</p>
                   </div>
                   <div>
                     <p className="text-foreground/60 text-sm">Email</p>
-                    <p className="font-semibold text-foreground text-sm break-all">{user.email}</p>
+                    <p className="font-semibold text-foreground text-sm break-all">{profile.email}</p>
                   </div>
                 </div>
 

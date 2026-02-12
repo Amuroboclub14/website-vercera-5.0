@@ -1,17 +1,20 @@
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
+const MAP_EMBED_URL =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d612.6850131734105!2d78.07731245929473!3d27.91425835521257!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3974a4e35a72ca85%3A0xc0f01f571f2881a9!2sAmuroboclub%20Office!5e1!3m2!1sen!2sin!4v1770872210538!5m2!1sen!2sin'
+
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
     <footer className="bg-secondary/50 border-t border-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-accent to-primary rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-accent to-primary rounded-[100%] flex items-center justify-center">
                 <span className="text-foreground font-display font-bold">V</span>
               </div>
               <span className="font-display font-bold text-lg">Vercera</span>
@@ -48,54 +51,41 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Contact + Map */}
           <div className="space-y-4">
-            <h4 className="font-bold text-foreground">Resources</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/rules" className="text-foreground/60 hover:text-accent transition-colors">
-                  Rules & Guidelines
-                </Link>
-              </li>
-              <li>
-                <Link href="/schedule" className="text-foreground/60 hover:text-accent transition-colors">
-                  Schedule
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-foreground/60 hover:text-accent transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-foreground/60 hover:text-accent transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-foreground">Get in Touch</h4>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <a href="mailto:info@vercera.com" className="text-foreground/60 hover:text-accent transition-colors">
-                  info@vercera.com
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <a href="tel:+919999999999" className="text-foreground/60 hover:text-accent transition-colors">
-                  +91 9999 999 999
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <span className="text-foreground/60">Tech Campus, Innovation Hub, City</span>
-              </li>
-            </ul>
+            <div>
+              <h4 className="font-bold text-foreground mb-4">Get in Touch</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="mailto:amuroboclub@gmail.com" className="text-foreground/60 hover:text-accent transition-colors break-all">
+                    amuroboclub@gmail.com
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="tel:+919999999999" className="text-foreground/60 hover:text-accent transition-colors">
+                    +91 9999 999 999
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <MapPin size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground/60">AMURoboclub, Mechanical Dept, Aligarh Muslim University</span>
+                </li>
+              </ul>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border/50 bg-card/30 w-full max-w-[320px] aspect-[4/3]">
+              <iframe
+                title="Amuroboclub Office"
+                src={MAP_EMBED_URL}
+                width="100%"
+                height="100%"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           </div>
         </div>
 
