@@ -23,7 +23,7 @@ function getAMURoboclubFirestore() {
 
   const serviceAccount = JSON.parse(serviceAccountJson) as ServiceAccount
   const app = initializeApp(
-    { credential: cert(serviceAccount), projectId: serviceAccount.project_id },
+    { credential: cert(serviceAccount) },
     appName
   )
   return getFirestore(app)
