@@ -6,7 +6,7 @@ const faqs = [
   {
     question: 'When is Vercera 5.0 happening?',
     answer:
-      'Vercera 5.0 is scheduled for March 14-16, 2024. Different events will be held across these days. Check the event details for specific timings.',
+      'Vercera 5.0 is scheduled for March 14-16, 2026. Different events will be held across these days. Check the event details for specific timings.',
   },
   {
     question: 'Can I participate in multiple events?',
@@ -61,9 +61,9 @@ export function FAQSection() {
         {/* FAQ Accordion */}
         <Accordion type="single" collapsible className="w-full space-y-3">
           {faqs.map((faq, index) => (
-            <AccordionItem 
-              key={index} 
-              value={`item-${index}`} 
+            <AccordionItem
+              key={index}
+              value={`item-${index}`}
               className="border border-border/50 rounded-lg bg-card/50 overflow-hidden data-[state=open]:bg-card data-[state=open]:border-accent/50 transition-all"
             >
               <AccordionTrigger className="text-foreground hover:text-accent transition-colors data-[state=open]:text-accent py-4 px-4 font-semibold hover:no-underline">

@@ -17,7 +17,7 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full">
             <span className="w-2 h-2 bg-accent rounded-full"></span>
-            <span className="text-sm text-foreground/80">National Level Technical Fest 2024</span>
+            <span className="text-sm text-foreground/80">National Level Technical Fest 2026</span>
           </div>
 
           {/* Main Heading */}
