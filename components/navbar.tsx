@@ -2,10 +2,20 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 import { Menu, X } from 'lucide-react'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const { user, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut()
+    setIsOpen(false)
+    router.push('/')
+  }
 
   return (
     <>
@@ -47,20 +57,30 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop - Login & Sign Up on the right */}
+        {/* Desktop - Login/Sign Up or Dashboard/Logout */}
         <div className="hidden md:flex items-center gap-0.5 shrink-0">
-          <Link
-            href="/login"
-            className="px-3 py-1.5 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="px-4 py-1.5 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all text-sm font-medium"
-          >
-            Sign Up
-          </Link>
+          {user ? (
+            <>
+              <Link href="/dashboard" className="px-3 py-1.5 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm">
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-1.5 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all text-sm font-medium"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="px-3 py-1.5 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm">
+                Login
+              </Link>
+              <Link href="/signup" className="px-4 py-1.5 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-full hover:shadow-lg hover:shadow-accent/30 transition-all text-sm font-medium">
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -105,20 +125,28 @@ export function Navbar() {
               FAQ
             </Link>
             <div className="h-px bg-border/40 my-2"></div>
-            <Link
-              href="/login"
-              className="block px-4 py-2 text-foreground/70 hover:text-foreground rounded-lg transition-all text-sm"
-              onClick={() => setIsOpen(false)}
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="block px-4 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-lg font-medium text-sm"
-              onClick={() => setIsOpen(false)}
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard" className="block px-4 py-2 text-foreground/70 hover:text-accent hover:bg-secondary/50 rounded-lg transition-all text-sm font-medium" onClick={() => setIsOpen(false)}>
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-lg font-medium text-sm"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="block px-4 py-2 text-foreground/70 hover:text-foreground rounded-lg transition-all text-sm" onClick={() => setIsOpen(false)}>
+                  Login
+                </Link>
+                <Link href="/signup" className="block px-4 py-2 bg-gradient-to-r from-accent to-primary text-accent-foreground rounded-lg font-medium text-sm" onClick={() => setIsOpen(false)}>
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
