@@ -1,12 +1,11 @@
 import Link from 'next/link'
-import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react'
+import { Mail, Phone, MapPin } from 'lucide-react'
 
-const EVENT_ADDRESS = 'Aligarh Muslim University, Aligarh, Uttar Pradesh'
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+const MAP_EMBED_URL =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d612.6850131734105!2d78.07731245929473!3d27.91425835521257!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3974a4e35a72ca85%3A0xc0f01f571f2881a9!2sAmuroboclub%20Office!5e1!3m2!1sen!2sin!4v1770872210538!5m2!1sen!2sin'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
-  const encodedAddress = encodeURIComponent(EVENT_ADDRESS)
 
   return (
     <footer className="bg-secondary/50 border-t border-border/50">
@@ -52,58 +51,43 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-foreground">Get in Touch</h4>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <a href="mailto:amuroboclub@gmail.com" className="text-foreground/60 hover:text-accent transition-colors">
-                  amuroboclub@gmail.com
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <a href="tel:+919999999999" className="text-foreground/60 hover:text-accent transition-colors">
-                  +91 9999 999 999
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                <span className="text-foreground/60">AMURoboclub, Mechanical Dept, Aligarh Muslim University</span>
-              </li>
-            </ul>
+          {/* Contact + Map */}
+          <div className="flex flex-col md:flex-row gap-6 md:gap-4 md:items-start">
+            <div className="space-y-4 flex-1 min-w-0">
+              <h4 className="font-bold text-foreground">Get in Touch</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="mailto:amuroboclub@gmail.com" className="text-foreground/60 hover:text-accent transition-colors">
+                    amuroboclub@gmail.com
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="tel:+919999999999" className="text-foreground/60 hover:text-accent transition-colors">
+                    +91 9999 999 999
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <MapPin size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground/60">AMURoboclub, Mechanical Dept, Aligarh Muslim University</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex-shrink-0 overflow-hidden rounded-xl border border-border/50 bg-card/30 w-full md:w-[280px] h-[180px]">
+              <iframe
+                title="Amuroboclub Office"
+                src={MAP_EMBED_URL}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+              />
+            </div>
           </div>
-        </div>
-
-        {/* Map */}
-        <div className="mb-8 overflow-hidden rounded-xl border border-border/50 bg-card/30">
-          {GOOGLE_MAPS_API_KEY ? (
-            <iframe
-              title="Event venue"
-              width="100%"
-              height="220"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedAddress}&zoom=15`}
-            />
-          ) : (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-2 py-12 px-6 bg-secondary/20 hover:bg-secondary/30 transition-colors group"
-            >
-              <MapPin size={32} className="text-accent" />
-              <p className="text-foreground/70 text-sm text-center">{EVENT_ADDRESS}</p>
-              <span className="inline-flex items-center gap-1.5 text-accent text-sm font-medium group-hover:underline">
-                Open in Google Maps
-                <ExternalLink size={14} />
-              </span>
-            </a>
-          )}
         </div>
 
         {/* Divider */}
