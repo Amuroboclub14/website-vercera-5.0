@@ -1,10 +1,9 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import Script from 'next/script'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { collection, addDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
@@ -15,6 +14,29 @@ interface Props {
   params: Promise<{ eventId: string }>
 }
 
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance
+  }
+}
+
+interface RazorpayOptions {
+  key: string
+  amount: number
+  currency: string
+  name: string
+  description: string
+  order_id: string
+  handler: (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => void
+  prefill?: { name?: string; email?: string }
+  theme?: { color: string }
+  modal?: { ondismiss?: () => void }
+}
+
+interface RazorpayInstance {
+  open: () => void
+}
+
 export default function CheckoutPage({ params }: Props) {
   const router = useRouter()
   const { eventId } = use(params)
@@ -22,6 +44,7 @@ export default function CheckoutPage({ params }: Props) {
   const { user, profile, loading } = useAuth()
 
   const [isLoading, setIsLoading] = useState(false)
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [formData, setFormData] = useState({
     teamName: '',
@@ -52,6 +75,8 @@ export default function CheckoutPage({ params }: Props) {
     )
   }
 
+  const totalAmount = Math.round(event.registrationFee * 1.18)
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -62,34 +87,94 @@ export default function CheckoutPage({ params }: Props) {
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !profile || !event) return
+    if (!user || !profile || !event || !razorpayLoaded) return
+
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+    if (!keyId) {
+      setPaymentStatus('failed')
+      return
+    }
+
     setIsLoading(true)
     setPaymentStatus('processing')
 
     try {
-      // Simulate Razorpay payment flow - replace with actual Razorpay integration
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      await addDoc(collection(db, 'registrations'), {
-        userId: user.uid,
-        eventId: event.id,
-        eventName: event.name,
-        amount: event.registrationFee,
-        registrationDate: new Date().toISOString().split('T')[0],
-        status: 'paid',
-        teamName: formData.teamName || null,
-        memberEmails: formData.memberEmails || null,
-        additionalInfo: formData.additionalInfo || null,
-        createdAt: new Date().toISOString(),
+      const createRes = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: totalAmount,
+          eventId: event.id,
+          eventName: event.name,
+          email: profile.email,
+          userId: user.uid,
+        }),
       })
 
-      setPaymentStatus('success')
+      if (!createRes.ok) {
+        const err = await createRes.json()
+        throw new Error(err.error || 'Failed to create order')
+      }
 
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
-    } catch {
+      const order = await createRes.json()
+
+      const options: RazorpayOptions = {
+        key: keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Vercera 5.0',
+        description: `Registration for ${event.name}`,
+        order_id: order.id,
+        prefill: {
+          name: profile.fullName,
+          email: profile.email,
+        },
+        theme: { color: '#d41f3d' },
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                eventId: event.id,
+                eventName: event.name,
+                amount: totalAmount,
+                userId: user.uid,
+                teamName: formData.teamName || null,
+                memberEmails: formData.memberEmails || null,
+                additionalInfo: formData.additionalInfo || null,
+              }),
+            })
+
+            if (verifyRes.ok) {
+              setPaymentStatus('success')
+              setTimeout(() => router.push('/dashboard'), 2000)
+            } else {
+              setPaymentStatus('failed')
+              setIsLoading(false)
+            }
+          } catch {
+            setPaymentStatus('failed')
+            setIsLoading(false)
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsLoading(false)
+            setPaymentStatus('idle')
+          },
+        },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch (err) {
+      console.error('Payment error:', err)
       setPaymentStatus('failed')
+    } finally {
       setIsLoading(false)
     }
   }
@@ -108,11 +193,15 @@ export default function CheckoutPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-background">
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="lazyOnload"
+        onLoad={() => setRazorpayLoaded(true)}
+      />
       <Navbar />
 
       <div className="pt-24 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back Button */}
           <Link
             href={`/events/${event.id}`}
             className="inline-flex items-center gap-2 text-accent hover:text-accent/80 transition-colors mb-8"
@@ -122,7 +211,6 @@ export default function CheckoutPage({ params }: Props) {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Form */}
             <div className="lg:col-span-2">
               <div className="bg-card border border-border rounded-xl p-8">
                 <h1 className="font-display text-3xl font-bold text-foreground mb-2">Complete Your Registration</h1>
@@ -156,7 +244,6 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                 ) : (
                   <form onSubmit={handlePayment} className="space-y-6">
-                    {/* Team Name */}
                     <div className="space-y-2">
                       <label htmlFor="teamName" className="block text-sm font-medium text-foreground">
                         Team Name (if applicable)
@@ -173,7 +260,6 @@ export default function CheckoutPage({ params }: Props) {
                       />
                     </div>
 
-                    {/* Member Emails */}
                     <div className="space-y-2">
                       <label htmlFor="memberEmails" className="block text-sm font-medium text-foreground">
                         Team Member Emails (comma-separated)
@@ -190,7 +276,6 @@ export default function CheckoutPage({ params }: Props) {
                       />
                     </div>
 
-                    {/* Additional Info */}
                     <div className="space-y-2">
                       <label htmlFor="additionalInfo" className="block text-sm font-medium text-foreground">
                         Additional Information
@@ -207,7 +292,6 @@ export default function CheckoutPage({ params }: Props) {
                       />
                     </div>
 
-                    {/* Agreement */}
                     <div className="bg-secondary/50 rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
                         <input
@@ -223,25 +307,22 @@ export default function CheckoutPage({ params }: Props) {
                       </div>
                     </div>
 
-                    {/* Submit Button */}
                     <button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isLoading || !razorpayLoaded}
                       className="w-full px-6 py-4 bg-accent text-accent-foreground rounded-lg font-bold text-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? 'Processing Payment...' : `Pay ₹${event.registrationFee} & Register`}
+                      {isLoading ? 'Opening Payment...' : !razorpayLoaded ? 'Loading...' : `Pay ₹${totalAmount} & Register`}
                     </button>
                   </form>
                 )}
               </div>
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-card border border-border rounded-xl p-6 sticky top-24 space-y-6">
                 <h2 className="font-display text-xl font-bold text-foreground">Order Summary</h2>
 
-                {/* Event Details */}
                 <div className="space-y-3">
                   <div>
                     <p className="text-foreground/60 text-sm">Event</p>
@@ -257,10 +338,8 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                 </div>
 
-                {/* Divider */}
                 <div className="border-t border-border"></div>
 
-                {/* Pricing */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-foreground/70">Registration Fee</span>
@@ -272,18 +351,13 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                 </div>
 
-                {/* Divider */}
                 <div className="border-t border-border"></div>
 
-                {/* Total */}
                 <div className="flex justify-between items-center">
                   <span className="font-display font-bold text-foreground text-lg">Total</span>
-                  <span className="font-display font-bold text-accent text-2xl">
-                    ₹{Math.round(event.registrationFee * 1.18)}
-                  </span>
+                  <span className="font-display font-bold text-accent text-2xl">₹{totalAmount}</span>
                 </div>
 
-                {/* Payment Methods */}
                 <div className="bg-secondary/50 rounded-lg p-4 space-y-2">
                   <p className="text-foreground/60 text-xs">Payment Method</p>
                   <p className="font-semibold text-foreground flex items-center gap-2">
@@ -294,7 +368,6 @@ export default function CheckoutPage({ params }: Props) {
                   </p>
                 </div>
 
-                {/* Info */}
                 <div className="bg-accent/10 border border-accent rounded-lg p-4 text-sm text-foreground/80">
                   All payments are secured by Razorpay and encrypted with SSL technology.
                 </div>

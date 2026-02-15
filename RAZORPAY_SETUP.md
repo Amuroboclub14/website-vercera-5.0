@@ -16,22 +16,24 @@ Vercera 5.0 is configured to accept payments through Razorpay, India's leading p
 
 ## Step 2: Configure Environment Variables
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root (or add to existing `.env.local`):
 
 ```env
 # Razorpay Configuration
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxxxxx
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxx
 RAZORPAY_KEY_SECRET=xxxxxxxxxxxxx
 
-# Site Configuration
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-NODE_ENV=production
+# Firebase Admin - Vercera project (required for verify-payment to save registrations)
+# Get from Vercera Firebase: Settings > Service accounts > Generate new private key
+# Paste the full JSON as a single-line string
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
 ```
 
 **Note:** 
 - `NEXT_PUBLIC_RAZORPAY_KEY_ID` is publicly visible (safe to expose)
 - `RAZORPAY_KEY_SECRET` must be kept secret and only used server-side
-- For development, you can use Razorpay's test credentials
+- For development, use Razorpay's **test** credentials (`rzp_test_...`)
+- `FIREBASE_SERVICE_ACCOUNT` must be from your Vercera Firebase project (where `registrations` are stored)
 
 ## Step 3: Server-Side Payment Implementation
 
