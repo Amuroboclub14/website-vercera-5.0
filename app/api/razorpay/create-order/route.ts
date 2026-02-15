@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const order = await razorpay.orders.create({
       amount: amountInPaise,
       currency: 'INR',
-      receipt: `vercera_${eventId}_${userId}_${Date.now()}`,
+      receipt: `v5_${eventId}_${Date.now().toString(36)}`,
       notes: {
         event_id: eventId,
         event_name: eventName,
