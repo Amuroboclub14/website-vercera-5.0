@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { events } from '@/lib/events'
 import { ArrowLeft, Users, Trophy, Clock, MapPin } from 'lucide-react'
@@ -22,59 +22,72 @@ export default function EventsPage() {
       <div className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-12">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-accent hover:text-accent/90 transition-colors mb-6 font-medium"
-            >
-              <ArrowLeft size={18} />
-              Back to Home
-            </Link>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-12"
+          >
+            <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-accent hover:text-accent/90 transition-colors mb-6 font-medium"
+              >
+                <ArrowLeft size={18} />
+                Back to Home
+              </Link>
+            </motion.div>
             <h1 className="font-display text-5xl sm:text-6xl font-bold text-foreground mb-4">
               All Events
             </h1>
             <p className="text-foreground/70 text-lg">Explore our complete catalog of technical and non-technical events at Vercera 5.0</p>
-          </div>
+          </motion.div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-3 mb-12">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                selectedCategory === 'all'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
-              }`}
-            >
-              All Events ({events.length})
-            </button>
-            <button
-              onClick={() => setSelectedCategory('technical')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                selectedCategory === 'technical'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
-              }`}
-            >
-              Technical ({events.filter((e) => e.category === 'technical').length})
-            </button>
-            <button
-              onClick={() => setSelectedCategory('non-technical')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
-                selectedCategory === 'non-technical'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
-              }`}
-            >
-              Non-Technical ({events.filter((e) => e.category === 'non-technical').length})
-            </button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="flex flex-wrap gap-3 mb-12"
+          >
+            {(['all', 'technical', 'non-technical'] as const).map((category, index) => (
+              <motion.button
+                key={category}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-6 py-2 rounded-full font-semibold transition-all ${
+                  selectedCategory === category
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
+                }`}
+              >
+                {category === 'all'
+                  ? `All Events (${events.length})`
+                  : category === 'technical'
+                  ? `Technical (${events.filter((e) => e.category === 'technical').length})`
+                  : `Non-Technical (${events.filter((e) => e.category === 'non-technical').length})`}
+              </motion.button>
+            ))}
+          </motion.div>
 
           {/* Events Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredEvents.map((event) => (
-              <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
+            {filteredEvents.map((event, index) => (
+              <motion.div
                 key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -8 }}
                 role="button"
                 tabIndex={0}
                 onClick={() => router.push(`/events/${event.id}`)}

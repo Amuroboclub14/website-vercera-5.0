@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { LogOut, Edit2, Clock, CheckCircle } from 'lucide-react'
 

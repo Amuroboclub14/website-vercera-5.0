@@ -7,7 +7,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 import { verifyAMURoboclubMember } from '@/lib/verification'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { Eye, EyeOff } from 'lucide-react'
 

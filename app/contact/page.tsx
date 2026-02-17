@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState } from 'react'
-import { Navbar } from '@/components/navbar'
+import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { Mail, Phone, MapPin, Send } from 'lucide-react'
 
