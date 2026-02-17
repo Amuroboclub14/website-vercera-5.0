@@ -11,14 +11,23 @@ export function Hero() {
       {/* Faulty terminal CRT-style background */}
       <div className="absolute inset-0 z-0 bg-background">
         <FaultyTerminalJSCSS
-          className="opacity-50"
-          scale={1.2}
+          scale={1.3}
+          gridMul={[2, 1]}
+          digitSize={1.2}
+          timeScale={0.5}
+          pause={false}
+          scanlineIntensity={0.5}
+          glitchAmount={1}
+          flickerAmount={1}
+          noiseAmp={1}
+          chromaticAberration={0}
+          dither={0}
+          curvature={0.12}
           tint="#C1E734"
-          curvature={0.15}
-          scanlineIntensity={0.35}
-          flickerAmount={0.8}
-          brightness={0.8}
+          mouseReact
+          mouseStrength={0.5}
           pageLoadAnimation
+          brightness={0.6}
         />
       </div>
 
