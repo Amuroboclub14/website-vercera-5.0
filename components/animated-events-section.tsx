@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { events } from '@/lib/events'
 import { ArrowRight, Users, Trophy } from 'lucide-react'
+import { GridScanJSCSS } from '@/components/GridScan-JS-CSS'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -32,13 +33,27 @@ export function EventsSection() {
 
   return (
     <section id="events" className="py-20 bg-secondary/30 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent rounded-full blur-3xl" />
+      {/* GridScan background — Vercera green theme (receives mouse for interactivity) */}
+      <div className="absolute inset-0 w-full h-full min-h-[600px]">
+        <div className="absolute inset-0 w-full h-full min-h-[600px]" style={{ position: 'relative' }}>
+          <GridScanJSCSS
+            sensitivity={0.55}
+            lineThickness={1}
+            linesColor="#2a3d2a"
+            gridScale={0.1}
+            scanColor="#C1E734"
+            scanOpacity={0.4}
+            enablePost
+            bloomIntensity={0.5}
+            chromaticAberration={0.002}
+            noiseIntensity={0.01}
+          />
+        </div>
+        <div className="absolute inset-0 bg-secondary/40 pointer-events-none" aria-hidden />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* Content — pointer-events-none so GridScan gets mouse; interactive elements get pointer-events-auto */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pointer-events-none">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -69,7 +84,7 @@ export function EventsSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:pointer-events-auto"
           >
             {technical.map((event) => (
               <EventCard key={event.id} event={event} />
@@ -93,7 +108,7 @@ export function EventsSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:pointer-events-auto"
           >
             {nonTechnical.map((event) => (
               <EventCard key={event.id} event={event} />
@@ -107,7 +122,7 @@ export function EventsSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center pt-8"
+          className="text-center pt-8 pointer-events-auto"
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link

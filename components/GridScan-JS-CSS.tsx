@@ -398,8 +398,8 @@ export function GridScanJSCSS({
       const u = m.uniforms as Record<string, { value: unknown }>
       const buf = new Array(MAX_SCANS).fill(0)
       for (let i = 0; i < arr.length && i < MAX_SCANS; i++) buf[i] = arr[i]
-      ;(u.uScanStarts as { value: number[] }).value = buf
-      ;(u.uScanCount as { value: number }).value = arr.length
+        ; (u.uScanStarts as { value: number[] }).value = buf
+        ; (u.uScanCount as { value: number }).value = arr.length
     }
   }
 
@@ -414,7 +414,7 @@ export function GridScanJSCSS({
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    let leaveTimer: ReturnType<typeof setTimeout> | null = null
+    let leaveTimer: number | null = null
     const onMove = (e: MouseEvent) => {
       if (leaveTimer) {
         clearTimeout(leaveTimer)
@@ -632,21 +632,21 @@ export function GridScanJSCSS({
     const m = materialRef.current
     if (m) {
       const u = m.uniforms as Record<string, { value: unknown }>
-      ;(u.uLineThickness as { value: number }).value = lineThickness
-      ;(u.uLinesColor as { value: THREE.Color }).value.copy(srgbColor(linesColor))
-      ;(u.uScanColor as { value: THREE.Color }).value.copy(srgbColor(scanColor))
-      ;(u.uGridScale as { value: number }).value = gridScale
-      ;(u.uLineStyle as { value: number }).value = lineStyle === 'dashed' ? 1 : lineStyle === 'dotted' ? 2 : 0
-      ;(u.uLineJitter as { value: number }).value = Math.max(0, Math.min(1, lineJitter || 0))
-      ;(u.uBloomOpacity as { value: number }).value = Math.max(0, bloomIntensity)
-      ;(u.uNoise as { value: number }).value = Math.max(0, noiseIntensity)
-      ;(u.uScanGlow as { value: number }).value = scanGlow
-      ;(u.uScanOpacity as { value: number }).value = Math.max(0, Math.min(1, scanOpacity))
-      ;(u.uScanDirection as { value: number }).value = scanDirection === 'backward' ? 1 : scanDirection === 'pingpong' ? 2 : 0
-      ;(u.uScanSoftness as { value: number }).value = scanSoftness
-      ;(u.uPhaseTaper as { value: number }).value = scanPhaseTaper
-      ;(u.uScanDuration as { value: number }).value = Math.max(0.05, scanDuration)
-      ;(u.uScanDelay as { value: number }).value = Math.max(0.0, scanDelay)
+        ; (u.uLineThickness as { value: number }).value = lineThickness
+        ; (u.uLinesColor as { value: THREE.Color }).value.copy(srgbColor(linesColor))
+        ; (u.uScanColor as { value: THREE.Color }).value.copy(srgbColor(scanColor))
+        ; (u.uGridScale as { value: number }).value = gridScale
+        ; (u.uLineStyle as { value: number }).value = lineStyle === 'dashed' ? 1 : lineStyle === 'dotted' ? 2 : 0
+        ; (u.uLineJitter as { value: number }).value = Math.max(0, Math.min(1, lineJitter || 0))
+        ; (u.uBloomOpacity as { value: number }).value = Math.max(0, bloomIntensity)
+        ; (u.uNoise as { value: number }).value = Math.max(0, noiseIntensity)
+        ; (u.uScanGlow as { value: number }).value = scanGlow
+        ; (u.uScanOpacity as { value: number }).value = Math.max(0, Math.min(1, scanOpacity))
+        ; (u.uScanDirection as { value: number }).value = scanDirection === 'backward' ? 1 : scanDirection === 'pingpong' ? 2 : 0
+        ; (u.uScanSoftness as { value: number }).value = scanSoftness
+        ; (u.uPhaseTaper as { value: number }).value = scanPhaseTaper
+        ; (u.uScanDuration as { value: number }).value = Math.max(0.05, scanDuration)
+        ; (u.uScanDelay as { value: number }).value = Math.max(0.0, scanDelay)
     }
     if (bloomRef.current) {
       bloomRef.current.blendMode.opacity.value = Math.max(0, bloomIntensity)
