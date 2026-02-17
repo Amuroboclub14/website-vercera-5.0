@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
@@ -11,7 +11,6 @@ import { Footer } from '@/components/footer'
 import { LogOut, Edit2, Clock, CheckCircle, QrCode, Copy, Check } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion } from 'framer-motion'
-import { generateVerceraId } from '@/lib/vercera-id'
 
 interface Registration {
   id: string
@@ -71,26 +70,18 @@ export default function DashboardPage() {
     const generateMissingVerceraId = async () => {
       if (user && profile && !profile.verceraId) {
         try {
-          let verceraId = generateVerceraId()
-          let isUnique = false
-          let attempts = 0
-          const maxAttempts = 10
+          const response = await fetch('/api/user/generate-vercera-id', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid }),
+          })
 
-          while (!isUnique && attempts < maxAttempts) {
-            const checkQuery = query(collection(db, 'vercera_5_participants'), where('verceraId', '==', verceraId))
-            const snapshot = await getDocs(checkQuery)
-            if (snapshot.empty) {
-              isUnique = true
-            } else {
-              verceraId = generateVerceraId()
-              attempts++
-            }
-          }
-
-          if (isUnique) {
-            await setDoc(doc(db, 'vercera_5_participants', user.uid), { verceraId }, { merge: true })
+          if (response.ok) {
             // Reload page to show new ID
             window.location.reload()
+          } else {
+            const error = await response.json()
+            console.error('Failed to generate Vercera ID:', error.error)
           }
         } catch (err) {
           console.error('Failed to generate Vercera ID:', err)
