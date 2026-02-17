@@ -3,17 +3,27 @@
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { FaultyTerminalJSCSS } from '@/components/FaultyTerminal-JS-CSS'
 
 export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Video background placeholder - will be added later */}
+      {/* Faulty terminal CRT-style background */}
       <div className="absolute inset-0 z-0 bg-background">
-        {/* Video will go here */}
+        <FaultyTerminalJSCSS
+          className="opacity-50"
+          scale={1.2}
+          tint="#C1E734"
+          curvature={0.15}
+          scanlineIntensity={0.35}
+          flickerAmount={0.8}
+          brightness={0.8}
+          pageLoadAnimation
+        />
       </div>
 
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/80 via-background/60 to-background/80 pointer-events-none" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/85 via-background/70 to-background/85 pointer-events-none" />
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
