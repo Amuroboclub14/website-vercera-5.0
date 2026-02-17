@@ -142,18 +142,20 @@ export default function EventsPage() {
                         <p className="text-foreground/60 text-xs">Fee</p>
                         <p className="font-bold text-accent text-lg">₹{event.registrationFee}</p>
                       </div>
-                      <Link
-                        href={`/checkout/${event.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="px-5 py-2 bg-accent text-accent-foreground rounded-lg font-semibold hover:bg-accent/90 transition-all text-sm"
-                      >
-                        Register
-                      </Link>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Link
+                          href={`/checkout/${event.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-5 py-2 bg-accent text-accent-foreground rounded-lg font-semibold hover:bg-accent/90 transition-all text-sm"
+                        >
+                          Register
+                        </Link>
+                      </motion.div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Empty State */}
           {filteredEvents.length === 0 && (

@@ -41,11 +41,13 @@ function AnimatedSphere({ mousePosition }: { mousePosition: { x: number; y: numb
 
 function FloatingParticles({ count = 50 }: { count?: number }) {
   const particles = useRef<THREE.Points>(null)
-  const positions = new Float32Array(count * 3)
+  const positions = useRef(new Float32Array(count * 3))
 
-  for (let i = 0; i < count * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 20
-  }
+  useEffect(() => {
+    for (let i = 0; i < count * 3; i++) {
+      positions.current[i] = (Math.random() - 0.5) * 20
+    }
+  }, [count])
 
   useFrame((state) => {
     if (particles.current) {
@@ -57,7 +59,12 @@ function FloatingParticles({ count = 50 }: { count?: number }) {
   return (
     <points ref={particles}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions.current}
+          itemSize={3}
+        />
       </bufferGeometry>
       <pointsMaterial size={0.05} color="#C1E734" transparent opacity={0.6} />
     </points>
