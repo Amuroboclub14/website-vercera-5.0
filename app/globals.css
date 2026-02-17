@@ -24,7 +24,11 @@ body {
   }
   
   .gradient-accent {
-    background: linear-gradient(135deg, #d41f3d 0%, #8b1a2e 100%);
+    background: linear-gradient(135deg, #C1E734 0%, #364326 100%);
+  }
+  
+  .gradient-green {
+    background: linear-gradient(135deg, #C1E734 0%, #364326 50%, #2f4227 100%);
   }
   
   .floating-nav {
