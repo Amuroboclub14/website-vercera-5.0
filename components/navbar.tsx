@@ -23,10 +23,10 @@ export function Navbar() {
       <nav className="floating-nav relative w-[calc(100%-2rem)] max-w-3xl px-3 py-2.5 bg-card/80 border border-border/40 shadow-2xl z-50 transition-all duration-300 flex items-center justify-between gap-2">
         {/* Logo - inside nav */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-9 h-9 flex items-center justify-center">
-            <img src="/vercera_logo.png" alt="Vercera" className="w-full h-full object-contain" />
+          <div className="w-18 h-9 flex items-center justify-center">
+            <img src="/vercera_logo_full.png" alt="Vercera" className="w-full h-full object-contain" />
           </div>
-          <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Vercera</span>
+          {/* <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Vercera</span> */}
         </Link>
 
         {/* Desktop - centered links only (Home, Events, Schedule, FAQ) */}
