@@ -66,12 +66,12 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/events"
-                className="px-8 py-4 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-accent/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-all group shadow-lg shadow-accent/20"
               >
                 Explore All Events
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -80,7 +80,7 @@ export function Hero() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/signup"
-                className="px-8 py-4 border border-border/50 bg-background/50 backdrop-blur-md text-foreground rounded-lg font-medium hover:bg-secondary/50 transition-all"
+                className="inline-flex items-center justify-center px-8 py-4 border border-border/50 bg-background/50 backdrop-blur-md text-foreground rounded-lg font-medium hover:bg-secondary/50 transition-all"
               >
                 Register Now
               </Link>
@@ -92,7 +92,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="grid grid-cols-3 gap-8 pt-16 sm:pt-20"
+            className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 pt-12 sm:pt-16 md:pt-20"
           >
             {[
               { value: '50+', label: 'Events' },

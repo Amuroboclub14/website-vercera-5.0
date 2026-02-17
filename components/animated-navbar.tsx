@@ -28,12 +28,13 @@ export function Navbar() {
   return (
     <>
       {/* Floating Pill Navbar */}
-      <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="floating-nav relative w-[calc(100%-2rem)] max-w-3xl px-3 py-2.5 bg-card/80 backdrop-blur-md border border-border/40 shadow-2xl z-50 transition-all duration-300 flex items-center justify-between gap-2"
-      >
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
+        <motion.nav
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-2.5 bg-card/80 backdrop-blur-md border border-border/40 shadow-2xl transition-all duration-300 flex items-center justify-between gap-2 sm:gap-4 rounded-full"
+        >
         {/* Logo */}
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Link href="/" className="flex items-center gap-2 group shrink-0">
@@ -46,12 +47,12 @@ export function Navbar() {
                 transition={{ duration: 0.6 }}
               />
             </div>
-            <span className="font-display font-bold text-xl text-foreground hidden sm:inline">Vercera</span>
+            <span className="font-display font-bold text-xl text-foreground hidden md:inline">Vercera</span>
           </Link>
         </motion.div>
 
         {/* Desktop - centered links */}
-        <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-0.5">
+        <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-1">
           {navItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -76,7 +77,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop - Login/Sign Up or Dashboard/Logout */}
-        <div className="hidden md:flex items-center gap-0.5 shrink-0">
+        <div className="hidden lg:flex items-center gap-1 shrink-0">
           {user ? (
             <>
               <Link href="/dashboard" className="px-3 py-1.5 text-foreground/70 hover:text-foreground rounded-full transition-all text-sm">
@@ -105,11 +106,11 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Mobile/Tablet Menu Button */}
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 hover:bg-secondary/50 rounded-full transition-colors"
+          className="lg:hidden p-2 hover:bg-secondary/50 rounded-full transition-colors"
         >
           <AnimatePresence mode="wait">
             {isOpen ? (
@@ -135,7 +136,8 @@ export function Navbar() {
             )}
           </AnimatePresence>
         </motion.button>
-      </motion.nav>
+        </motion.nav>
+      </div>
 
       {/* Mobile Navigation Menu */}
       <AnimatePresence>
@@ -145,7 +147,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100%-2rem)] md:hidden"
+            className="fixed top-20 left-4 right-4 z-40 lg:hidden"
           >
             <motion.div
               initial={{ scale: 0.95 }}
