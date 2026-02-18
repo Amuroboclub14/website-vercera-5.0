@@ -1,24 +1,57 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { events } from '@/lib/events'
-import { ArrowLeft, Clock, MapPin, Users, Trophy, Check } from 'lucide-react'
+import { ArrowLeft, Clock, MapPin, Users, Trophy, Check, BadgeCheck, QrCode } from 'lucide-react'
+import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
+type RegistrationDoc = {
+  id: string
+  status?: string
+  registrationDate?: string
+  amount?: number
+  isTeamEvent?: boolean
+  isTeamLeader?: boolean
+  teamId?: string
+  verceraTeamId?: string
+}
+
+type TeamMember = {
+  userId: string
+  verceraId: string
+  fullName: string
+  email: string
+  isLeader?: boolean
+}
+
+type TeamDoc = {
+  teamName?: string | null
+  verceraTeamId: string
+  members: TeamMember[]
+  size?: number
+}
+
 export default function EventDetailPage({ params }: Props) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { id } = use(params)
   const event = events.find((e) => e.id === id)
   const [isRegistering, setIsRegistering] = useState(false)
+  const [regLoading, setRegLoading] = useState(false)
+  const [registration, setRegistration] = useState<RegistrationDoc | null>(null)
+  const [teamLoading, setTeamLoading] = useState(false)
+  const [team, setTeam] = useState<TeamDoc | null>(null)
 
   if (!event) {
     return (
@@ -43,6 +76,74 @@ export default function EventDetailPage({ params }: Props) {
 
   const registrationPercentage = (event.registeredCount / event.maxParticipants) * 100
   const spotsAvailable = event.maxParticipants - event.registeredCount
+  const isTeamEvent = event.isTeamEvent ?? false
+  const teamSizeText = useMemo(() => {
+    if (!isTeamEvent) return 'Solo'
+    const min = event.teamSizeMin ?? 1
+    const max = event.teamSizeMax ?? min
+    return min === max ? `${min}` : `${min}-${max}`
+  }, [event.teamSizeMin, event.teamSizeMax, isTeamEvent])
+
+  useEffect(() => {
+    if (!user || !event) {
+      setRegistration(null)
+      setTeam(null)
+      return
+    }
+
+    const run = async () => {
+      setRegLoading(true)
+      setTeamLoading(false)
+      setTeam(null)
+
+      try {
+        const regsRef = collection(db, 'registrations')
+        const q = query(regsRef, where('userId', '==', user.uid), where('eventId', '==', event.id), limit(1))
+        const snap = await getDocs(q)
+        if (snap.empty) {
+          setRegistration(null)
+          return
+        }
+
+        const d = snap.docs[0].data() as Record<string, unknown>
+        const reg: RegistrationDoc = {
+          id: snap.docs[0].id,
+          status: (d.status as string | undefined) ?? undefined,
+          registrationDate: (d.registrationDate as string | undefined) ?? undefined,
+          amount: (d.amount as number | undefined) ?? undefined,
+          isTeamEvent: Boolean(d.isTeamEvent),
+          isTeamLeader: Boolean(d.isTeamLeader),
+          teamId: (d.teamId as string | undefined) ?? undefined,
+          verceraTeamId: (d.verceraTeamId as string | undefined) ?? undefined,
+        }
+        setRegistration(reg)
+
+        if (reg.teamId) {
+          setTeamLoading(true)
+          const teamSnap = await getDoc(doc(db, 'teams', reg.teamId))
+          if (teamSnap.exists()) {
+            const td = teamSnap.data() as Record<string, unknown>
+            setTeam({
+              teamName: (td.teamName as string | null | undefined) ?? null,
+              verceraTeamId: String(td.verceraTeamId || ''),
+              members: (td.members as TeamMember[]) || [],
+              size: (td.size as number | undefined) ?? undefined,
+            })
+          } else {
+            setTeam(null)
+          }
+        }
+      } catch {
+        setRegistration(null)
+        setTeam(null)
+      } finally {
+        setRegLoading(false)
+        setTeamLoading(false)
+      }
+    }
+
+    run()
+  }, [user, event])
 
   const handleRegisterClick = () => {
     if (!user) {
@@ -164,10 +265,35 @@ export default function EventDetailPage({ params }: Props) {
             {/* Sidebar - Registration Card */}
             <div className="lg:col-span-1">
               <div className="bg-card border border-border rounded-xl p-6 space-y-6 sticky top-24">
+                {/* Registered Status */}
+                {regLoading ? (
+                  <div className="bg-secondary rounded-lg p-4 text-sm text-foreground/70">
+                    Checking your registration…
+                  </div>
+                ) : registration ? (
+                  <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-accent font-semibold">
+                      <BadgeCheck size={18} />
+                      Registered
+                    </div>
+                    <p className="text-foreground/70 text-sm">
+                      {registration.isTeamEvent ? 'Team registration confirmed.' : 'Your registration is confirmed.'}
+                    </p>
+                    {registration.registrationDate && (
+                      <p className="text-xs text-foreground/60">Date: {registration.registrationDate}</p>
+                    )}
+                  </div>
+                ) : null}
+
                 {/* Price Section */}
                 <div className="space-y-2">
                   <p className="text-foreground/60 text-sm">Registration Fee</p>
                   <p className="font-display text-4xl font-bold text-accent">₹{event.registrationFee}</p>
+                  {isTeamEvent && (
+                    <p className="text-xs text-foreground/60">
+                      Per-person fee • Team size: {teamSizeText}
+                    </p>
+                  )}
                 </div>
 
                 {/* Registration Progress */}
@@ -188,7 +314,15 @@ export default function EventDetailPage({ params }: Props) {
                 </div>
 
                 {/* CTA Button */}
-                {spotsAvailable > 0 ? (
+                {registration ? (
+                  <button
+                    disabled
+                    className="w-full px-6 py-3 bg-accent/20 text-accent rounded-lg font-bold cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <BadgeCheck size={18} />
+                    Registered
+                  </button>
+                ) : spotsAvailable > 0 ? (
                   <button
                     onClick={handleRegisterClick}
                     disabled={isRegistering}
@@ -200,6 +334,62 @@ export default function EventDetailPage({ params }: Props) {
                   <button disabled className="w-full px-6 py-3 bg-muted text-muted-foreground rounded-lg font-bold cursor-not-allowed">
                     Registration Closed
                   </button>
+                )}
+
+                {/* Team Info (if registered as team) */}
+                {registration?.isTeamEvent && (
+                  <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-foreground font-semibold">
+                      <QrCode size={18} className="text-accent" />
+                      Team Details
+                    </div>
+
+                    {teamLoading ? (
+                      <p className="text-sm text-foreground/60">Loading team info…</p>
+                    ) : team && team.verceraTeamId ? (
+                      <>
+                        <div className="space-y-1 text-sm">
+                          <p className="text-foreground/60">Team Name</p>
+                          <p className="font-semibold text-foreground">{team.teamName || '—'}</p>
+                        </div>
+
+                        <div className="space-y-1 text-sm">
+                          <p className="text-foreground/60">Team ID</p>
+                          <p className="font-semibold text-foreground">{team.verceraTeamId}</p>
+                        </div>
+
+                        <div className="flex items-center justify-center py-2">
+                          <div className="bg-background rounded-lg p-3 border border-border">
+                            <QRCodeSVG value={team.verceraTeamId} size={140} />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-foreground">Members</p>
+                          <ul className="space-y-1 text-sm text-foreground/80">
+                            {team.members.map((m) => (
+                              <li key={m.userId} className="flex items-center justify-between gap-3">
+                                <span className="truncate">
+                                  {m.fullName}
+                                  {m.isLeader ? (
+                                    <span className="ml-2 text-xs text-foreground/50">(Leader)</span>
+                                  ) : null}
+                                </span>
+                                <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </>
+                    ) : registration.verceraTeamId ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-foreground/70">Team ID</p>
+                        <p className="font-semibold text-foreground">{registration.verceraTeamId}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-foreground/60">Team info not available yet.</p>
+                    )}
+                  </div>
                 )}
 
                 {/* Info Message */}
@@ -223,7 +413,7 @@ export default function EventDetailPage({ params }: Props) {
                   </div>
                   <div>
                     <p className="text-foreground/60 mb-1">Team Size</p>
-                    <p className="font-semibold text-foreground">Check rules above</p>
+                    <p className="font-semibold text-foreground">{teamSizeText}</p>
                   </div>
                 </div>
               </div>
