@@ -37,6 +37,13 @@ interface RazorpayInstance {
   open: () => void
 }
 
+type TeamMember = {
+  userId: string
+  verceraId: string
+  fullName: string
+  email: string
+}
+
 export default function CheckoutPage({ params }: Props) {
   const router = useRouter()
   const { eventId } = use(params)
@@ -47,10 +54,12 @@ export default function CheckoutPage({ params }: Props) {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [formData, setFormData] = useState({
-    teamName: '',
-    memberEmails: '',
     additionalInfo: '',
   })
+  const [teamName, setTeamName] = useState('')
+  const [memberInput, setMemberInput] = useState('')
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [memberError, setMemberError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -75,7 +84,14 @@ export default function CheckoutPage({ params }: Props) {
     )
   }
 
-  const totalAmount = Math.round(event.registrationFee * 1.18)
+  const isTeamEvent = event.isTeamEvent ?? false
+  const minTeamSize = isTeamEvent ? event.teamSizeMin ?? 1 : 1
+  const maxTeamSize = isTeamEvent ? event.teamSizeMax ?? minTeamSize : 1
+  const currentTeamSize = isTeamEvent ? 1 + teamMembers.length : 1
+
+  const perPersonAmount = event.registrationFee
+  const baseAmount = isTeamEvent ? perPersonAmount * currentTeamSize : perPersonAmount
+  const totalAmount = Math.round(baseAmount * 1.18)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -85,9 +101,75 @@ export default function CheckoutPage({ params }: Props) {
     }))
   }
 
+  const handleAddMember = async () => {
+    const trimmed = memberInput.trim().toUpperCase()
+    if (!trimmed) return
+    setMemberError(null)
+
+    if (!profile) {
+      setMemberError('You must be logged in to add team members.')
+      return
+    }
+
+    if (trimmed === profile.verceraId) {
+      setMemberError('You are already the team leader.')
+      return
+    }
+
+    if (!isTeamEvent) {
+      setMemberError('This event does not use team registration.')
+      return
+    }
+
+    const nextSize = 1 + teamMembers.length + 1
+    if (nextSize > maxTeamSize) {
+      setMemberError(`Maximum team size is ${maxTeamSize}.`)
+      return
+    }
+
+    if (teamMembers.some((m) => m.verceraId === trimmed)) {
+      setMemberError('This member is already in the team.')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/user/lookup-by-vercera-id', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verceraId: trimmed }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setMemberError(data.error || 'Failed to find participant.')
+        return
+      }
+
+      const data = await res.json()
+      const user = data.user as TeamMember
+
+      setTeamMembers((prev) => [...prev, user])
+      setMemberInput('')
+    } catch {
+      setMemberError('Failed to lookup participant. Please try again.')
+    }
+  }
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !profile || !event || !razorpayLoaded) return
+
+    if (isTeamEvent) {
+      const size = currentTeamSize
+      if (size < minTeamSize || size > maxTeamSize) {
+        setMemberError(`Team size must be between ${minTeamSize} and ${maxTeamSize} members (including you).`)
+        return
+      }
+      if (!teamName.trim()) {
+        setMemberError('Please enter a team name.')
+        return
+      }
+    }
 
     const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
     if (!keyId) {
@@ -132,6 +214,28 @@ export default function CheckoutPage({ params }: Props) {
         theme: { color: '#C1E734' },
         handler: async (response) => {
           try {
+            const teamPayload =
+              isTeamEvent && profile
+                ? {
+                    isTeamEvent: true,
+                    teamName: teamName.trim(),
+                    teamSize: currentTeamSize,
+                    members: [
+                      {
+                        userId: user.uid,
+                        verceraId: profile.verceraId,
+                        fullName: profile.fullName,
+                        email: profile.email,
+                        isLeader: true,
+                      },
+                      ...teamMembers.map((m) => ({
+                        ...m,
+                        isLeader: false,
+                      })),
+                    ],
+                  }
+                : null
+
             const verifyRes = await fetch('/api/razorpay/verify-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -143,8 +247,7 @@ export default function CheckoutPage({ params }: Props) {
                 eventName: event.name,
                 amount: totalAmount,
                 userId: user.uid,
-                teamName: formData.teamName || null,
-                memberEmails: formData.memberEmails || null,
+                team: teamPayload,
                 additionalInfo: formData.additionalInfo || null,
               }),
             })
@@ -244,37 +347,84 @@ export default function CheckoutPage({ params }: Props) {
                   </div>
                 ) : (
                   <form onSubmit={handlePayment} className="space-y-6">
-                    <div className="space-y-2">
-                      <label htmlFor="teamName" className="block text-sm font-medium text-foreground">
-                        Team Name (if applicable)
-                      </label>
-                      <input
-                        type="text"
-                        id="teamName"
-                        name="teamName"
-                        value={formData.teamName}
-                        onChange={handleInputChange}
-                        placeholder="Team Name"
-                        className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                        disabled={isLoading}
-                      />
-                    </div>
+                    {isTeamEvent && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label htmlFor="teamName" className="block text-sm font-medium text-foreground">
+                            Team Name
+                          </label>
+                          <input
+                            type="text"
+                            id="teamName"
+                            value={teamName}
+                            onChange={(e) => setTeamName(e.target.value)}
+                            placeholder="Enter your team name"
+                            className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                            disabled={isLoading}
+                          />
+                        </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="memberEmails" className="block text-sm font-medium text-foreground">
-                        Team Member Emails (comma-separated)
-                      </label>
-                      <textarea
-                        id="memberEmails"
-                        name="memberEmails"
-                        value={formData.memberEmails}
-                        onChange={handleInputChange}
-                        placeholder="member1@email.com, member2@email.com"
-                        rows={3}
-                        className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all resize-none"
-                        disabled={isLoading}
-                      />
-                    </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-foreground">
+                            Add Team Members by Vercera ID
+                          </label>
+                          <p className="text-xs text-foreground/60">
+                            You are counted as the team leader. Add between {minTeamSize} and {maxTeamSize} members in
+                            total (including you).
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={memberInput}
+                              onChange={(e) => setMemberInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleAddMember()
+                                }
+                              }}
+                              placeholder="Enter Vercera ID (e.g. V5_ABCDEFGH)"
+                              className="flex-1 px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                              disabled={isLoading}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddMember}
+                              disabled={isLoading}
+                              className="px-4 py-3 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
+                            >
+                              Add
+                            </button>
+                          </div>
+                          {memberError && <p className="text-xs text-destructive mt-1">{memberError}</p>}
+
+                          {teamMembers.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs font-medium text-foreground/80">
+                                Team members ({currentTeamSize} / {maxTeamSize} including you):
+                              </p>
+                              <ul className="space-y-1 text-sm">
+                                <li className="flex items-center justify-between text-foreground/80">
+                                  <span>
+                                    {profile.fullName} <span className="text-xs text-foreground/50">(Leader)</span>
+                                  </span>
+                                  <span className="text-xs text-foreground/50">{profile.verceraId}</span>
+                                </li>
+                                {teamMembers.map((m) => (
+                                  <li key={m.userId} className="flex items-center justify-between text-foreground/80">
+                                    <div>
+                                      <span>{m.fullName}</span>
+                                      <span className="ml-2 text-xs text-foreground/50">{m.email}</span>
+                                    </div>
+                                    <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <label htmlFor="additionalInfo" className="block text-sm font-medium text-foreground">
