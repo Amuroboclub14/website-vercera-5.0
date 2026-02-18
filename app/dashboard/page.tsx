@@ -22,11 +22,31 @@ interface Registration {
   attended?: boolean
 }
 
+type TeamMember = {
+  userId: string
+  verceraId: string
+  fullName: string
+  email: string
+  isLeader?: boolean
+}
+
+interface TeamDoc {
+  id: string
+  teamName: string | null
+  verceraTeamId: string
+  eventId: string
+  eventName: string
+  members: TeamMember[]
+  size?: number
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const { user, profile, loading, signOut } = useAuth()
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [regsLoading, setRegsLoading] = useState(true)
+  const [teams, setTeams] = useState<TeamDoc[]>([])
+  const [teamsLoading, setTeamsLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -63,6 +83,35 @@ export default function DashboardPage() {
       }
     }
     fetchRegistrations()
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    const fetchTeams = async () => {
+      try {
+        const teamsRef = collection(db, 'teams')
+        const q = query(teamsRef, where('memberIds', 'array-contains', user.uid))
+        const snapshot = await getDocs(q)
+        const list: TeamDoc[] = snapshot.docs.map((docSnap) => {
+          const d = docSnap.data()
+          return {
+            id: docSnap.id,
+            teamName: (d.teamName as string | null) ?? null,
+            verceraTeamId: String(d.verceraTeamId ?? ''),
+            eventId: String(d.eventId ?? ''),
+            eventName: String(d.eventName ?? 'Event'),
+            members: (d.members as TeamMember[]) ?? [],
+            size: d.size as number | undefined,
+          }
+        })
+        setTeams(list)
+      } catch {
+        setTeams([])
+      } finally {
+        setTeamsLoading(false)
+      }
+    }
+    fetchTeams()
   }, [user])
 
   // Handle legacy users without verceraId (generate one if missing)
@@ -314,6 +363,65 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+
+              {/* Your Teams */}
+              {(teamsLoading || teams.length > 0) && (
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="font-display text-2xl font-bold text-foreground">Your Teams</h2>
+                    <p className="text-foreground/60 text-sm mt-1">Teams you are part of for event registrations</p>
+                  </div>
+                  {teamsLoading ? (
+                    <div className="p-6 text-center text-foreground/60">Loading teams...</div>
+                  ) : teams.length > 0 ? (
+                    <div className="divide-y divide-border">
+                      {teams.map((team) => (
+                        <div key={team.id} className="p-6 hover:bg-secondary/30 transition-colors">
+                          <div className="flex flex-col sm:flex-row gap-6">
+                            <div className="flex-1 space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-foreground text-lg">{team.teamName || 'Unnamed Team'}</h3>
+                                <p className="text-foreground/60 text-sm">{team.eventName}</p>
+                              </div>
+                              <div>
+                                <p className="text-foreground/60 text-xs mb-1">Team ID</p>
+                                <code className="text-accent font-mono text-sm">{team.verceraTeamId}</code>
+                              </div>
+                              <ul className="space-y-1.5 text-sm text-foreground/80">
+                                {team.members.map((m) => (
+                                  <li key={m.userId} className="flex items-center gap-2">
+                                    <span>{m.fullName}</span>
+                                    {m.isLeader && (
+                                      <span className="px-2 py-0.5 bg-accent/20 text-accent text-xs font-medium rounded">Leader</span>
+                                    )}
+                                    <span className="text-foreground/50 text-xs">{m.verceraId}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <Link
+                                href={`/events/${team.eventId}`}
+                                className="inline-block px-4 py-2 bg-secondary text-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors"
+                              >
+                                View Event
+                              </Link>
+                            </div>
+                            <div className="flex flex-col items-center justify-center gap-2 sm:border-l sm:border-border sm:pl-6">
+                              <p className="text-foreground/60 text-xs">Team QR</p>
+                              <div className="bg-white rounded-lg p-2 border border-border">
+                                <QRCodeSVG value={team.verceraTeamId} size={120} level="H" fgColor="#000000" bgColor="#ffffff" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-foreground/60 text-sm">
+                      You are not part of any team registrations yet.
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-secondary/30 border border-border rounded-xl p-6">
                 <h3 className="font-semibold text-foreground mb-3">Need Help?</h3>
