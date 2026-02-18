@@ -379,6 +379,7 @@ export function FaultyTerminalJSCSS({
     resize()
 
     const update = (t: number) => {
+      if (typeof document !== 'undefined' && document.hidden) return
       rafRef.current = requestAnimationFrame(update)
       const prog = programRef.current
       if (!prog) return
@@ -416,13 +417,30 @@ export function FaultyTerminalJSCSS({
 
       rendererRef.current?.render({ scene: mesh })
     }
-    rafRef.current = requestAnimationFrame(update)
+    const startLoop = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(update)
+    }
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current)
+          rafRef.current = 0
+        }
+      } else {
+        startLoop()
+      }
+    }
+    startLoop()
     ctn.appendChild(gl.canvas)
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     if (mouseReact) ctn.addEventListener('mousemove', handleMouseMove as unknown as EventListener)
 
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
       resizeObserver.disconnect()
       if (mouseReact) ctn.removeEventListener('mousemove', handleMouseMove as unknown as EventListener)
       if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas)

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { events } from '@/lib/events'
 import { ArrowRight, Users, Trophy } from 'lucide-react'
 import { GridScanJSCSS } from '@/components/GridScan-JS-CSS'
-import { usePreferLightBackgrounds } from '@/hooks/use-prefer-light-backgrounds'
+import { useBackgroundQuality } from '@/hooks/use-prefer-light-backgrounds'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,7 +31,7 @@ const itemVariants = {
 export function EventsSection() {
   const technical = events.filter((e) => e.category === 'technical')
   const nonTechnical = events.filter((e) => e.category === 'non-technical')
-  const preferLight = usePreferLightBackgrounds()
+  const { preferLightBackgrounds: preferLight, enablePostProcessing } = useBackgroundQuality()
 
   return (
     <section id="events" className="py-20 bg-secondary/30 relative overflow-hidden">
@@ -55,7 +55,7 @@ export function EventsSection() {
               gridScale={0.1}
               scanColor="#C1E734"
               scanOpacity={0.4}
-              enablePost
+              enablePost={enablePostProcessing}
               bloomIntensity={0.5}
               chromaticAberration={0.002}
               noiseIntensity={0.01}

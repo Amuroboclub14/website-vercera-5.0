@@ -4,10 +4,10 @@ import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { FaultyTerminalJSCSS } from '@/components/FaultyTerminal-JS-CSS'
-import { usePreferLightBackgrounds } from '@/hooks/use-prefer-light-backgrounds'
+import { useBackgroundQuality } from '@/hooks/use-prefer-light-backgrounds'
 
 export function Hero() {
-  const preferLight = usePreferLightBackgrounds()
+  const { preferLightBackgrounds: preferLight, enablePostProcessing } = useBackgroundQuality()
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -40,6 +40,7 @@ export function Hero() {
             mouseStrength={0.5}
             pageLoadAnimation
             brightness={0.5}
+            dpr={enablePostProcessing ? 2 : 1}
           />
         )}
       </div>

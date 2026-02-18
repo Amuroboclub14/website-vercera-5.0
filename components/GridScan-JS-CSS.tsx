@@ -462,9 +462,10 @@ export function GridScanJSCSS({
     const container = containerRef.current
     if (!container) return
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true })
     rendererRef.current = renderer
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, window.innerWidth >= 1024 ? 2 : 1)
+    renderer.setPixelRatio(pixelRatio)
     renderer.setSize(container.clientWidth, container.clientHeight)
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.NoToneMapping
@@ -541,14 +542,17 @@ export function GridScanJSCSS({
     }
 
     const onResize = () => {
+      const pr = Math.min(window.devicePixelRatio || 1, window.innerWidth >= 1024 ? 2 : 1)
+      renderer.setPixelRatio(pr)
       renderer.setSize(container.clientWidth, container.clientHeight)
-      material.uniforms.iResolution.value.set(container.clientWidth, container.clientHeight, renderer.getPixelRatio())
+      material.uniforms.iResolution.value.set(container.clientWidth, container.clientHeight, pr)
       if (composerRef.current) composerRef.current.setSize(container.clientWidth, container.clientHeight)
     }
     window.addEventListener('resize', onResize)
 
     let last = performance.now()
     const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return
       const now = performance.now()
       const dt = Math.max(0, Math.min(0.1, (now - last) / 1000))
       last = now
@@ -591,10 +595,25 @@ export function GridScanJSCSS({
       }
       rafRef.current = requestAnimationFrame(tick)
     }
-    rafRef.current = requestAnimationFrame(tick)
+    const startLoop = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    const onVisibilityChange = () => {
+      if (document.hidden && rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = 0
+      } else if (!document.hidden) {
+        startLoop()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    startLoop()
 
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
       window.removeEventListener('resize', onResize)
       material.dispose()
       quad.geometry.dispose()
