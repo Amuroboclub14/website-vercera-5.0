@@ -23,6 +23,16 @@ export function Footer() {
             <p className="text-foreground/60 text-sm">
               National-level technical fest bringing together innovators and builders from across the country.
             </p>
+            <div className="pt-2">
+              <p className="text-foreground/50 text-xs mb-2">Organized by</p>
+              <Image
+                src="/amuroboclub.png"
+                alt="AMURoboclub"
+                width={140}
+                height={40}
+                className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
 
           {/* Quick Links */}

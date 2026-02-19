@@ -37,7 +37,7 @@ export function EventsSection() {
       <AnimatedGridBackground />
       <div className="absolute inset-0 bg-secondary/40 pointer-events-none" aria-hidden />
 
-      {/* Content — pointer-events-none so GridScan gets mouse; interactive elements get pointer-events-auto */}
+      {/* Content — interactive elements get pointer-events-auto */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pointer-events-none">
         {/* Section Header */}
         <motion.div
