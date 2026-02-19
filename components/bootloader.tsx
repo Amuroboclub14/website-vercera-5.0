@@ -19,13 +19,18 @@ export function Bootloader({ onComplete }: BootloaderProps) {
 
   // Ensure mobile detection works immediately
   useEffect(() => {
-    setIsMobileState(window.innerWidth < 768)
-    const handleResize = () => {
+    if (typeof window !== 'undefined') {
       setIsMobileState(window.innerWidth < 768)
+      const handleResize = () => {
+        setIsMobileState(window.innerWidth < 768)
+      }
+      window.addEventListener('resize', handleResize)
+      return () => window.removeEventListener('resize', handleResize)
     }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
   }, [])
+  
+  // Use the more reliable mobile state
+  const isMobileDevice = isMobileState || (typeof window !== 'undefined' && window.innerWidth < 768)
 
   useEffect(() => {
     // Allow skipping after 1 second
@@ -107,73 +112,76 @@ export function Bootloader({ onComplete }: BootloaderProps) {
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
           {/* Animated background pattern for blank spaces (mobile) */}
-          {(isMobile || isMobileState) && (
+          {isMobileDevice && (
             <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-              {/* Animated grid pattern - VISIBLE */}
+              {/* Animated grid pattern - MUCH MORE VISIBLE */}
               <motion.div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: 'linear-gradient(rgba(193, 231, 52, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(193, 231, 52, 0.25) 1px, transparent 1px)',
-                  backgroundSize: '25px 25px',
+                  backgroundImage: 'linear-gradient(rgba(193, 231, 52, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(193, 231, 52, 0.4) 1px, transparent 1px)',
+                  backgroundSize: '20px 20px',
+                  opacity: 0.3,
                 }}
                 animate={{
-                  backgroundPosition: ['0% 0%', '25px 25px'],
+                  backgroundPosition: ['0% 0%', '20px 20px'],
                 }}
                 transition={{
-                  duration: 12,
+                  duration: 10,
                   repeat: Infinity,
                   ease: 'linear',
                 }}
               />
               
-              {/* Floating particles - VISIBLE */}
-              {[...Array(15)].map((_, i) => (
+              {/* Floating particles - MUCH MORE VISIBLE */}
+              {[...Array(20)].map((_, i) => (
                 <motion.div
                   key={i}
                   className="absolute rounded-full"
                   style={{
-                    width: '5px',
-                    height: '5px',
-                    background: 'rgba(193, 231, 52, 0.8)',
-                    boxShadow: '0 0 8px rgba(193, 231, 52, 0.6)',
-                    left: `${3 + (i * 6.5)}%`,
-                    top: i % 4 === 0 ? '5%' : i % 4 === 1 ? '30%' : i % 4 === 2 ? '70%' : '95%',
+                    width: '6px',
+                    height: '6px',
+                    background: 'rgba(193, 231, 52, 1)',
+                    boxShadow: '0 0 12px rgba(193, 231, 52, 0.8), 0 0 20px rgba(193, 231, 52, 0.4)',
+                    left: `${2 + (i * 5)}%`,
+                    top: `${5 + (i % 18) * 5}%`,
                   }}
                   animate={{
-                    opacity: [0.3, 1, 0.3],
-                    scale: [1, 2.5, 1],
+                    opacity: [0.4, 1, 0.4],
+                    scale: [1, 3, 1],
                   }}
                   transition={{
-                    duration: 2 + i * 0.15,
+                    duration: 1.5 + i * 0.1,
                     repeat: Infinity,
                     ease: 'easeInOut',
-                    delay: i * 0.1,
+                    delay: i * 0.08,
                   }}
                 />
               ))}
               
-              {/* Pulsing circles in blank spaces - VISIBLE */}
-              {[...Array(6)].map((_, i) => (
+              {/* Pulsing circles in blank spaces - MUCH MORE VISIBLE */}
+              {[...Array(8)].map((_, i) => (
                 <motion.div
                   key={`circle-${i}`}
                   className="absolute rounded-full border-2"
                   style={{
-                    width: '80px',
-                    height: '80px',
-                    borderColor: 'rgba(193, 231, 52, 0.5)',
-                    left: `${15 + (i * 14)}%`,
-                    top: i % 2 === 0 ? '3%' : '97%',
+                    width: '100px',
+                    height: '100px',
+                    borderColor: 'rgba(193, 231, 52, 0.7)',
+                    borderWidth: '2px',
+                    boxShadow: '0 0 15px rgba(193, 231, 52, 0.5)',
+                    left: `${10 + (i * 11)}%`,
+                    top: i % 2 === 0 ? '2%' : '98%',
                     transform: 'translate(-50%, -50%)',
                   }}
                   animate={{
-                    scale: [1, 2, 1],
-                    opacity: [0.3, 0.7, 0.3],
+                    scale: [1, 2.5, 1],
+                    opacity: [0.4, 0.9, 0.4],
                   }}
                   transition={{
-                    duration: 2.5 + i * 0.3,
+                    duration: 2 + i * 0.2,
                     repeat: Infinity,
                     ease: 'easeInOut',
-                    delay: i * 0.3,
+                    delay: i * 0.25,
                   }}
                 />
               ))}
@@ -192,7 +200,7 @@ export function Bootloader({ onComplete }: BootloaderProps) {
               zIndex: 2,
             }}
           >
-            {(isMobile || isMobileState) ? (
+            {isMobileDevice ? (
               <video
                 ref={videoRef}
                 src="/bootloader.mp4"
@@ -229,6 +237,31 @@ export function Bootloader({ onComplete }: BootloaderProps) {
               />
             )}
           </motion.div>
+
+          {/* Gradient overlays for mobile - positioned at root level */}
+          {isMobileDevice && (
+            <>
+              {/* Top gradient overlay - covers top blank space and blends into video */}
+              <div
+                className="fixed top-0 left-0 right-0 pointer-events-none"
+                style={{
+                  height: '40%',
+                  background: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.95) 25%, rgba(0, 0, 0, 0.75) 50%, rgba(0, 0, 0, 0.4) 75%, rgba(0, 0, 0, 0.1) 90%, rgba(0, 0, 0, 0) 100%)',
+                  zIndex: 3,
+                }}
+              />
+              
+              {/* Bottom gradient overlay - covers bottom blank space and blends into video */}
+              <div
+                className="fixed bottom-0 left-0 right-0 pointer-events-none"
+                style={{
+                  height: '40%',
+                  background: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.95) 25%, rgba(0, 0, 0, 0.75) 50%, rgba(0, 0, 0, 0.4) 75%, rgba(0, 0, 0, 0.1) 90%, rgba(0, 0, 0, 0) 100%)',
+                  zIndex: 3,
+                }}
+              />
+            </>
+          )}
 
           {/* Skip Button */}
           {canSkip && (
