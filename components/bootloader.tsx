@@ -99,14 +99,24 @@ export function Bootloader({ onComplete }: BootloaderProps) {
             animate={{ scale: isExiting ? 1.1 : 1, opacity: isExiting ? 0 : 1 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
             className="absolute inset-0 w-screen h-screen"
+            style={{
+              width: '100vw',
+              height: '100vh',
+              minWidth: '100%',
+              minHeight: '100%',
+            }}
           >
             <video
               ref={videoRef}
               src="/bootloader.mp4"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full"
               style={{
                 objectFit: 'cover',
                 objectPosition: 'center',
+                width: '100vw',
+                height: '100vh',
+                minWidth: '100%',
+                minHeight: '100%',
               }}
               onEnded={handleVideoEnd}
               onLoadedData={handleVideoLoaded}
