@@ -46,11 +46,11 @@ export default function RootLayout({
         <link rel="icon" href="/vercera_logo.png" type="image/png" />
       </head>
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}>
+        <CursorCircularText />
         <BootloaderWrapper>
           <SmoothScrollProvider>
             <AuthProvider>
               {children}
-              <CursorCircularText />
               <FloatingSocialNav />
             </AuthProvider>
           </SmoothScrollProvider>
