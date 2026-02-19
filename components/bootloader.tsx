@@ -43,30 +43,45 @@ export function Bootloader({ onComplete }: BootloaderProps) {
     }, 800)
   }
 
+  useEffect(() => {
+    const playVideo = () => {
+      if (videoRef.current) {
+        // Try to play with sound first
+        videoRef.current.play().catch((err) => {
+          console.log('Video play with sound failed, trying muted:', err)
+          // If autoplay with sound fails, try muted
+          if (videoRef.current) {
+            videoRef.current.muted = true
+            videoRef.current.play().catch((err2) => {
+              console.error('Video play failed:', err2)
+              // If autoplay fails completely, allow manual play or skip
+              setCanSkip(true)
+            })
+          }
+        })
+      }
+    }
+
+    // Try to play video when component mounts or when video is ready
+    if (videoRef.current && videoRef.current.readyState >= 2) {
+      playVideo()
+    }
+  }, [])
+
   const handleVideoLoaded = () => {
     if (videoRef.current) {
-      // Try to play with sound first
       videoRef.current.play().catch((err) => {
         console.log('Video play with sound failed, trying muted:', err)
-        // If autoplay with sound fails, try muted
         if (videoRef.current) {
           videoRef.current.muted = true
           videoRef.current.play().catch((err2) => {
             console.error('Video play failed:', err2)
-            // If autoplay fails completely, allow manual play or skip
             setCanSkip(true)
           })
         }
       })
     }
   }
-
-  useEffect(() => {
-    // Try to play video when component mounts
-    if (videoRef.current) {
-      handleVideoLoaded()
-    }
-  }, [])
 
   return (
     <AnimatePresence>
@@ -76,19 +91,23 @@ export function Bootloader({ onComplete }: BootloaderProps) {
           animate={{ opacity: isExiting ? 0 : 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] bg-background flex items-center justify-center"
+          className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
-          {/* Video Container */}
+          {/* Video Container - Full screen, no borders */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: isExiting ? 1.1 : 1, opacity: isExiting ? 0 : 1 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
-            className="relative w-full h-full flex items-center justify-center"
+            className="absolute inset-0 w-screen h-screen"
           >
             <video
               ref={videoRef}
               src="/bootloader.mp4"
-              className="w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
               onEnded={handleVideoEnd}
               onLoadedData={handleVideoLoaded}
               onCanPlay={handleVideoLoaded}
