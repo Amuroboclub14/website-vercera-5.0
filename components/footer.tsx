@@ -25,13 +25,21 @@ export function Footer() {
             </p>
             <div className="pt-2">
               <p className="text-foreground/50 text-xs mb-2">Organized by</p>
+              <a
+                href="https://amuroboclub.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-transform hover:scale-105"
+              >
               <Image
                 src="/amuroboclub.png"
                 alt="AMURoboclub"
-                width={140}
-                height={40}
+                width={200}
+                height={60}
+                quality={100}
                 className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
               />
+              </a>
             </div>
           </div>
 

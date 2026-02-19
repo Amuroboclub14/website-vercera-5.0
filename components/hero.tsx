@@ -38,21 +38,27 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex items-center gap-2 text-sm text-foreground/60"
+            className="flex flex-col items-center justify-center gap-2 text-sm text-foreground/60 pointer-events-auto"
           >
-            <span>Organized by</span>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2"
+            <span className="font-mono">Organized by</span>
+            <motion.a
+              href="https://amuroboclub.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-100 opacity-80 relative z-10"
             >
               <Image
                 src="/amuroboclub.png"
                 alt="AMURoboclub"
-                width={120}
-                height={32}
-                className="h-6 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                width={200}
+                height={60}
+                quality={100}
+                priority
+                className="h-8 w-auto object-contain"
               />
-            </motion.div>
+            </motion.a>
           </motion.div>
 
           {/* Main Heading */}
