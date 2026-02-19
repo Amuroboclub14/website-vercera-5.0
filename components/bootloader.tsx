@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface BootloaderProps {
   onComplete: () => void
@@ -13,6 +14,7 @@ export function Bootloader({ onComplete }: BootloaderProps) {
   const [isExiting, setIsExiting] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [canSkip, setCanSkip] = useState(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     // Allow skipping after 1 second
@@ -93,30 +95,24 @@ export function Bootloader({ onComplete }: BootloaderProps) {
           transition={{ duration: 0.8, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
-          {/* Video Container - Full screen, no borders */}
+          {/* Video Container */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: isExiting ? 1.1 : 1, opacity: isExiting ? 0 : 1 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
-            className="absolute inset-0 w-screen h-screen"
+            className="absolute inset-0 w-screen h-screen flex items-center justify-center"
             style={{
               width: '100vw',
               height: '100vh',
-              minWidth: '100%',
-              minHeight: '100%',
             }}
           >
             <video
               ref={videoRef}
               src="/bootloader.mp4"
-              className="absolute inset-0 w-full h-full"
+              className={isMobile ? 'w-full h-auto max-h-full' : 'w-full h-full'}
               style={{
-                objectFit: 'cover',
+                objectFit: isMobile ? 'contain' : 'cover',
                 objectPosition: 'center',
-                width: '100vw',
-                height: '100vh',
-                minWidth: '100%',
-                minHeight: '100%',
               }}
               onEnded={handleVideoEnd}
               onLoadedData={handleVideoLoaded}
@@ -126,6 +122,28 @@ export function Bootloader({ onComplete }: BootloaderProps) {
               autoPlay
               preload="auto"
             />
+            
+            {/* Gradient overlays for mobile - blend top and bottom edges */}
+            {isMobile && (
+              <>
+                {/* Top gradient */}
+                <div
+                  className="absolute top-0 left-0 right-0 pointer-events-none z-10"
+                  style={{
+                    height: '15%',
+                    background: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 30%, rgba(0, 0, 0, 0) 100%)',
+                  }}
+                />
+                {/* Bottom gradient */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
+                  style={{
+                    height: '15%',
+                    background: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 30%, rgba(0, 0, 0, 0) 100%)',
+                  }}
+                />
+              </>
+            )}
           </motion.div>
 
           {/* Skip Button */}
