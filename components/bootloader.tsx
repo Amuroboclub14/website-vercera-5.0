@@ -15,6 +15,17 @@ export function Bootloader({ onComplete }: BootloaderProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [canSkip, setCanSkip] = useState(false)
   const isMobile = useIsMobile()
+  const [isMobileState, setIsMobileState] = useState(false)
+
+  // Ensure mobile detection works immediately
+  useEffect(() => {
+    setIsMobileState(window.innerWidth < 768)
+    const handleResize = () => {
+      setIsMobileState(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     // Allow skipping after 1 second
@@ -95,6 +106,80 @@ export function Bootloader({ onComplete }: BootloaderProps) {
           transition={{ duration: 0.8, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-black overflow-hidden"
         >
+          {/* Animated background pattern for blank spaces (mobile) */}
+          {(isMobile || isMobileState) && (
+            <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+              {/* Animated grid pattern - VISIBLE */}
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: 'linear-gradient(rgba(193, 231, 52, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(193, 231, 52, 0.25) 1px, transparent 1px)',
+                  backgroundSize: '25px 25px',
+                }}
+                animate={{
+                  backgroundPosition: ['0% 0%', '25px 25px'],
+                }}
+                transition={{
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              />
+              
+              {/* Floating particles - VISIBLE */}
+              {[...Array(15)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: '5px',
+                    height: '5px',
+                    background: 'rgba(193, 231, 52, 0.8)',
+                    boxShadow: '0 0 8px rgba(193, 231, 52, 0.6)',
+                    left: `${3 + (i * 6.5)}%`,
+                    top: i % 4 === 0 ? '5%' : i % 4 === 1 ? '30%' : i % 4 === 2 ? '70%' : '95%',
+                  }}
+                  animate={{
+                    opacity: [0.3, 1, 0.3],
+                    scale: [1, 2.5, 1],
+                  }}
+                  transition={{
+                    duration: 2 + i * 0.15,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: i * 0.1,
+                  }}
+                />
+              ))}
+              
+              {/* Pulsing circles in blank spaces - VISIBLE */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={`circle-${i}`}
+                  className="absolute rounded-full border-2"
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderColor: 'rgba(193, 231, 52, 0.5)',
+                    left: `${15 + (i * 14)}%`,
+                    top: i % 2 === 0 ? '3%' : '97%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                  animate={{
+                    scale: [1, 2, 1],
+                    opacity: [0.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 2.5 + i * 0.3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: i * 0.3,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Video Container */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -104,45 +189,44 @@ export function Bootloader({ onComplete }: BootloaderProps) {
             style={{
               width: '100vw',
               height: '100vh',
+              zIndex: 2,
             }}
           >
-            <video
-              ref={videoRef}
-              src="/bootloader.mp4"
-              className={isMobile ? 'w-full h-auto max-h-full' : 'w-full h-full'}
-              style={{
-                objectFit: isMobile ? 'contain' : 'cover',
-                objectPosition: 'center',
-              }}
-              onEnded={handleVideoEnd}
-              onLoadedData={handleVideoLoaded}
-              onCanPlay={handleVideoLoaded}
-              playsInline
-              muted={false}
-              autoPlay
-              preload="auto"
-            />
-            
-            {/* Gradient overlays for mobile - blend top and bottom edges */}
-            {isMobile && (
-              <>
-                {/* Top gradient */}
-                <div
-                  className="absolute top-0 left-0 right-0 pointer-events-none z-10"
-                  style={{
-                    height: '15%',
-                    background: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 30%, rgba(0, 0, 0, 0) 100%)',
-                  }}
-                />
-                {/* Bottom gradient */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
-                  style={{
-                    height: '15%',
-                    background: 'linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 30%, rgba(0, 0, 0, 0) 100%)',
-                  }}
-                />
-              </>
+            {(isMobile || isMobileState) ? (
+              <video
+                ref={videoRef}
+                src="/bootloader.mp4"
+                className="relative w-full h-auto max-h-full"
+                style={{
+                  objectFit: 'contain',
+                  objectPosition: 'center',
+                  display: 'block',
+                }}
+                onEnded={handleVideoEnd}
+                onLoadedData={handleVideoLoaded}
+                onCanPlay={handleVideoLoaded}
+                playsInline
+                muted={false}
+                autoPlay
+                preload="auto"
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                src="/bootloader.mp4"
+                className="w-full h-full"
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+                onEnded={handleVideoEnd}
+                onLoadedData={handleVideoLoaded}
+                onCanPlay={handleVideoLoaded}
+                playsInline
+                muted={false}
+                autoPlay
+                preload="auto"
+              />
             )}
           </motion.div>
 
