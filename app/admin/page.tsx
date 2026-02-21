@@ -95,17 +95,17 @@ export default function AdminDashboardPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground">
           Dashboard
         </h1>
-        <p className="text-foreground/60 mt-1">
+        <p className="text-foreground/60 mt-1 text-sm sm:text-base">
           Overview of Vercera 5.0 registrations and revenue
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {cards.map((card) => {
           const C = card.icon
           const content = (
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
                 </span>
                 <C className="h-5 w-5 text-accent/80" />
               </div>
-              <p className="text-2xl font-bold text-foreground mt-2">
+              <p className="text-lg sm:text-2xl font-bold text-foreground mt-1 sm:mt-2 truncate">
                 {card.value}
               </p>
               {card.sub && (
@@ -128,14 +128,14 @@ export default function AdminDashboardPage() {
             <Link
               key={card.label}
               href={card.href}
-              className="block p-4 rounded-xl border border-border bg-card hover:bg-card/80 transition-colors"
+              className="block p-3 sm:p-4 rounded-xl border border-border bg-card hover:bg-card/80 transition-colors touch-manipulation active:scale-[0.98]"
             >
               {content}
             </Link>
           ) : (
             <div
               key={card.label}
-              className="p-4 rounded-xl border border-border bg-card"
+              className="p-3 sm:p-4 rounded-xl border border-border bg-card"
             >
               {content}
             </div>
@@ -143,13 +143,13 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+            <Calendar className="h-4 w-4 shrink-0" />
             Revenue by Event
           </h2>
-          <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+          <div className="mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
             {Object.entries(stats.eventWise).length === 0 ? (
               <p className="text-foreground/50 text-sm">No data yet</p>
             ) : (
@@ -170,12 +170,12 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <ListChecks className="h-4 w-4" />
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+            <ListChecks className="h-4 w-4 shrink-0" />
             Recent Registrations
           </h2>
-          <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+          <div className="mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
             {stats.recentRegistrations.length === 0 ? (
               <p className="text-foreground/50 text-sm">No registrations yet</p>
             ) : (

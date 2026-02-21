@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
@@ -14,6 +14,8 @@ import {
   Users,
   LogOut,
   ShieldCheck,
+  Menu,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +42,7 @@ export default function AdminLayout({
   const isEventAdminOnly = level === 'event_admin'
   const nav = isEventAdminOnly ? scanOnlyNav : fullNav
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!adminChecked) return
@@ -85,43 +88,88 @@ export default function AdminLayout({
     return null
   }
 
+  const NavLinks = () => (
+    <>
+      {nav.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setMenuOpen(false)}
+          className={cn(
+            'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors min-h-[48px]',
+            pathname === item.href
+              ? 'bg-accent/20 text-accent'
+              : 'text-foreground/70 hover:bg-secondary hover:text-foreground active:bg-secondary'
+          )}
+        >
+          <item.icon className="h-5 w-5 shrink-0" />
+          {item.label}
+        </Link>
+      ))}
+      <Link
+        href="/"
+        onClick={() => {
+          setMenuOpen(false)
+          handleSignOut()
+        }}
+        className="flex items-center gap-3 px-4 py-3 rounded-lg text-base text-foreground/70 hover:bg-secondary hover:text-foreground active:bg-secondary min-h-[48px] mt-2 border-t border-border"
+      >
+        <LogOut className="h-5 w-5 shrink-0" />
+        Back to site
+      </Link>
+    </>
+  )
+
   return (
-    <div className="min-h-screen bg-background flex">
-      <aside className="w-56 border-r border-border bg-card/30 flex flex-col">
-        <div className="p-4 border-b border-border">
-          <Link href="/admin" className="font-display font-bold text-lg text-foreground">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row min-h-[100dvh]">
+      {/* Mobile header */}
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm safe-area-inset-top">
+        <Link href="/admin" className="font-display font-bold text-lg text-foreground" onClick={() => setMenuOpen(false)}>
+          Vercera Admin
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          className="p-2.5 rounded-lg hover:bg-secondary text-foreground touch-manipulation"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        >
+          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </header>
+
+      {/* Mobile menu overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden bg-black/50 backdrop-blur-sm"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={cn(
+          'fixed top-0 left-0 z-50 h-full w-[min(280px,85vw)] max-w-full flex flex-col border-r border-border bg-card shadow-xl transition-transform duration-200 ease-out md:relative md:z-auto md:translate-x-0 md:shadow-none md:w-56',
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <div className="p-4 border-b border-border flex items-center justify-between md:block">
+          <Link href="/admin" className="font-display font-bold text-lg text-foreground" onClick={() => setMenuOpen(false)}>
             Vercera Admin
           </Link>
-        </div>
-        <nav className="flex-1 p-2 space-y-0.5">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                pathname === item.href
-                  ? 'bg-accent/20 text-accent'
-                  : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-2 border-t border-border">
-          <Link
-            href="/"
-            onClick={handleSignOut}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground/70 hover:bg-secondary hover:text-foreground"
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg hover:bg-secondary text-foreground"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
           >
-            <LogOut className="h-4 w-4" />
-            Back to site
-          </Link>
+            <X className="h-5 w-5" />
+          </button>
         </div>
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          <NavLinks />
+        </nav>
       </aside>
-      <main className="flex-1 overflow-auto p-6 md:p-8">
+
+      <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8 pb-[env(safe-area-inset-bottom)] min-w-0">
         {children}
       </main>
     </div>
