@@ -3,11 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
-import {
-  ListChecks,
-  Search,
-  Filter,
-} from 'lucide-react'
+import { ListChecks, Search } from 'lucide-react'
 import { events } from '@/lib/events'
 
 interface Reg {
@@ -19,6 +15,10 @@ interface Reg {
   attended?: boolean
   userId?: string
   verceraId?: string
+  participantName?: string
+  participantEmail?: string | null
+  verceraTeamId?: string
+  teamId?: string
   createdAt?: string
   razorpayOrderId?: string
 }
@@ -54,6 +54,8 @@ export default function AdminRegistrationsPage() {
       (r.eventName || '').toLowerCase().includes(q) ||
       (r.eventId || '').toLowerCase().includes(q) ||
       (r.verceraId || '').toLowerCase().includes(q) ||
+      (r.participantName || '').toLowerCase().includes(q) ||
+      (r.verceraTeamId || '').toLowerCase().includes(q) ||
       (r.status || '').toLowerCase().includes(q)
     )
   })
@@ -75,7 +77,7 @@ export default function AdminRegistrationsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
           <input
             type="text"
-            placeholder="Search event name, Vercera ID, status..."
+            placeholder="Search name, Vercera ID, team ID, event, status..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-full border border-border bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
@@ -114,10 +116,16 @@ export default function AdminRegistrationsPage() {
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
                   <th className="text-left py-3 px-4 font-medium text-foreground/80">
-                    Event
+                    Participant
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-foreground/80">
                     Vercera ID
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-foreground/80">
+                    Event
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-foreground/80">
+                    Team
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-foreground/80">
                     Status
@@ -136,7 +144,7 @@ export default function AdminRegistrationsPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-foreground/50">
+                    <td colSpan={8} className="py-8 text-center text-foreground/50">
                       No registrations match your filters.
                     </td>
                   </tr>
@@ -147,10 +155,16 @@ export default function AdminRegistrationsPage() {
                       className="border-b border-border/50 hover:bg-secondary/20 transition-colors"
                     >
                       <td className="py-3 px-4 text-foreground">
-                        {r.eventName || r.eventId || '—'}
+                        {r.participantName || '—'}
                       </td>
                       <td className="py-3 px-4 text-foreground/80 font-mono text-xs">
                         {r.verceraId || '—'}
+                      </td>
+                      <td className="py-3 px-4 text-foreground">
+                        {r.eventName || r.eventId || '—'}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-xs text-foreground/70">
+                        {r.verceraTeamId || '—'}
                       </td>
                       <td className="py-3 px-4">
                         <span
