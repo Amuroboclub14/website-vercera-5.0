@@ -13,17 +13,20 @@ import {
   QrCode,
   Users,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const nav = [
+const fullNav = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/registrations', label: 'Registrations', icon: ListChecks },
   { href: '/admin/events', label: 'Events', icon: Calendar },
   { href: '/admin/transactions', label: 'Transactions', icon: Receipt },
   { href: '/admin/scan', label: 'Ticket Scan', icon: QrCode },
   { href: '/admin/participants', label: 'Participants', icon: Users },
+  { href: '/admin/admins', label: 'Manage admins', icon: ShieldCheck },
 ]
+const scanOnlyNav = [{ href: '/admin/scan', label: 'Ticket Scan', icon: QrCode }]
 
 export default function AdminLayout({
   children,
@@ -33,7 +36,9 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAuth()
-  const { isAdmin, adminChecked, loading } = useAdmin()
+  const { isAdmin, level, adminChecked, loading } = useAdmin()
+  const isEventAdminOnly = level === 'event_admin'
+  const nav = isEventAdminOnly ? scanOnlyNav : fullNav
 
   useEffect(() => {
     if (!adminChecked) return
@@ -45,7 +50,10 @@ export default function AdminLayout({
       router.replace('/')
       return
     }
-  }, [adminChecked, isAdmin, loading, user, router])
+    if (isAdmin && level === 'event_admin' && pathname !== '/admin/scan' && pathname.startsWith('/admin')) {
+      router.replace('/admin/scan')
+    }
+  }, [adminChecked, isAdmin, level, loading, user, router, pathname])
 
   const handleSignOut = () => {
     router.push('/')
