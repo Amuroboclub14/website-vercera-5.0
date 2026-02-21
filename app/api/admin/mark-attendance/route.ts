@@ -1,28 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
-
-function getVerceraFirestore() {
-  const appName = 'vercera-firestore'
-  if (getApps().some((app) => app.name === appName)) {
-    return getFirestore(getApps().find((a) => a.name === appName)!)
-  }
-
-  const json = process.env.FIREBASE_SERVICE_ACCOUNT
-  const path = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
-
-  let serviceAccount: ServiceAccount
-  if (path) {
-    serviceAccount = require(path) as ServiceAccount
-  } else if (json) {
-    serviceAccount = JSON.parse(json) as ServiceAccount
-  } else {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH not configured')
-  }
-
-  initializeApp({ credential: cert(serviceAccount) }, appName)
-  return getFirestore(getApps().find((a) => a.name === appName)!)
-}
+import { getVerceraFirestore } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
