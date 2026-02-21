@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
@@ -39,6 +39,7 @@ export default function AdminLayout({
   const { isAdmin, level, adminChecked, loading } = useAdmin()
   const isEventAdminOnly = level === 'event_admin'
   const nav = isEventAdminOnly ? scanOnlyNav : fullNav
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!adminChecked) return
@@ -47,8 +48,21 @@ export default function AdminLayout({
       return
     }
     if (user && !loading && !isAdmin) {
-      router.replace('/')
-      return
+      // Delay redirect slightly so we don't redirect on a brief stale state before check completes
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.replace('/')
+      }, 150)
+      return () => {
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current)
+          redirectTimeoutRef.current = null
+        }
+      }
+    }
+    // Cancel any pending redirect when we become admin
+    if (redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
     }
     if (isAdmin && level === 'event_admin' && pathname !== '/admin/scan' && pathname.startsWith('/admin')) {
       router.replace('/admin/scan')

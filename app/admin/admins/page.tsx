@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { ShieldCheck, Search } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import { useAdmin } from '@/hooks/use-admin'
 
@@ -23,6 +24,7 @@ interface AdminRole {
 type RoleOption = 'super_admin' | 'event_admin' | ''
 
 export default function AdminManageAdminsPage() {
+  const { user } = useAuth()
   const fetchWithAuth = useAdminFetch()
   const { level } = useAdmin()
   const [participants, setParticipants] = useState<Participant[]>([])
@@ -31,6 +33,8 @@ export default function AdminManageAdminsPage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
   const isOwner = level === 'owner'
+  // Don't show the current user in the list (owner/super-admin manages others, not themselves)
+  const participantsFiltered = participants.filter((p) => p.id !== user?.uid)
 
   const loadAdmins = useCallback(() => {
     fetchWithAuth('/api/admin/admins')
@@ -125,14 +129,16 @@ export default function AdminManageAdminsPage() {
                 </tr>
               </thead>
               <tbody>
-                {participants.length === 0 ? (
+                {participantsFiltered.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-foreground/50">
-                      No participants match your search.
+                      {participants.length === 0
+                        ? 'No participants match your search.'
+                        : 'No other participants to show (you are excluded from this list).'}
                     </td>
                   </tr>
                 ) : (
-                  participants.map((p) => {
+                  participantsFiltered.map((p) => {
                     const current = roleByUserId[p.id]
                     return (
                       <tr
