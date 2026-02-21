@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
-import { verifyAdminToken, unauthorizedResponse } from '@/lib/admin-auth'
+import { requireAdminLevel } from '@/lib/admin-auth'
+
+const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
 
 export async function GET(request: NextRequest) {
-  const uid = await verifyAdminToken(request)
-  if (!uid) return unauthorizedResponse()
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS])
+  if (auth instanceof NextResponse) return auth
+  const uid = auth.uid
   try {
     const db = getVerceraFirestore()
 

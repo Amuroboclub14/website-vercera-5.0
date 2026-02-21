@@ -65,3 +65,14 @@ export function unauthorizedResponse() {
 export function forbiddenResponse() {
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
+
+/** Verify admin and require one of the allowed levels. Returns { uid, level } or sends 401/403. */
+export async function requireAdminLevel(
+  request: NextRequest,
+  allowed: AdminLevel[]
+): Promise<{ uid: string; level: AdminLevel } | NextResponse> {
+  const result = await verifyAdminWithLevel(request)
+  if (!result) return unauthorizedResponse()
+  if (!allowed.includes(result.level)) return forbiddenResponse()
+  return result
+}
