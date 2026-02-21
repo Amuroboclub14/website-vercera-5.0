@@ -15,28 +15,29 @@ interface Participant {
 
 interface AdminRole {
   userId: string
-  role: 'super_admin' | 'event_admin'
+  role: 'super_admin' | 'event_admin' | 'owner'
   email?: string | null
   fullName?: string | null
   addedAt?: string | null
 }
 
-type RoleOption = 'super_admin' | 'event_admin' | ''
+type RoleOption = 'owner' | 'super_admin' | 'event_admin' | ''
 
 export default function AdminManageAdminsPage() {
   const { user } = useAuth()
   const fetchWithAuth = useAdminFetch()
-  const { level } = useAdmin()
+  const { level, bootstrapOwnerUid } = useAdmin()
   const [participants, setParticipants] = useState<Participant[]>([])
   const [admins, setAdmins] = useState<AdminRole[]>([])
-  const [ownerUid, setOwnerUid] = useState<string | null>(null)
+  const [ownerUids, setOwnerUids] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
   const isOwner = level === 'owner'
-  // Hide current user and owner from the list (owner is set in env and cannot be assigned a role here)
+  const isBootstrapOwner = user?.uid === bootstrapOwnerUid
+  // Hide current user and all owners from the list
   const participantsFiltered = participants.filter(
-    (p) => p.id !== user?.uid && p.id !== ownerUid
+    (p) => p.id !== user?.uid && !ownerUids.includes(p.id)
   )
 
   const loadAdmins = useCallback(() => {
@@ -45,11 +46,11 @@ export default function AdminManageAdminsPage() {
       .then((data) => {
         if (data.error) throw new Error(data.error)
         setAdmins(data.admins || [])
-        setOwnerUid(data.ownerUid ?? null)
+        setOwnerUids(Array.isArray(data.ownerUids) ? data.ownerUids : [])
       })
       .catch(() => {
         setAdmins([])
-        setOwnerUid(null)
+        setOwnerUids([])
       })
   }, [fetchWithAuth])
 
@@ -105,8 +106,8 @@ export default function AdminManageAdminsPage() {
           Manage admins
         </h1>
         <p className="text-foreground/60 mt-1">
-          Assign Event Admin or Super Admin to participants. Only the owner can assign Super Admins.
-          Event Admins can only access Ticket Scan; Super Admins have full access except managing Super Admins.
+          Assign Owner, Super Admin, or Event Admin. Only the primary owner (set in env) can assign new Owners.
+          Event Admins can only access Ticket Scan; Super Admins have full access except managing Owners.
         </p>
       </div>
 
@@ -171,6 +172,7 @@ export default function AdminManageAdminsPage() {
                             <option value="">None</option>
                             <option value="event_admin">Event Admin</option>
                             {isOwner && <option value="super_admin">Super Admin</option>}
+                            {isBootstrapOwner && <option value="owner">Owner</option>}
                           </select>
                           {updating === p.id && (
                             <span className="ml-2 text-foreground/50 text-xs">Updating…</span>

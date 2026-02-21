@@ -20,19 +20,20 @@ export function useAdmin() {
   const [adminChecked, setAdminChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [level, setLevel] = useState<AdminLevel | null>(null);
+  const [bootstrapOwnerUid, setBootstrapOwnerUid] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || authLoading) {
       setAdminChecked(false);
       setIsAdmin(false);
       setLevel(null);
+      setBootstrapOwnerUid(null);
       return;
     }
     let cancelled = false;
 
     (async () => {
       try {
-        // Force refresh token so server gets a valid one (avoids stale/expired token)
         const res = await checkAdmin(user.getIdToken.bind(user), true);
         if (cancelled) return;
         if (res.ok) {
@@ -42,10 +43,10 @@ export function useAdmin() {
             setAdminChecked(true);
             setIsAdmin(true);
             setLevel(data.level ?? null);
+            setBootstrapOwnerUid(data.bootstrapOwnerUid ?? null);
             return;
           }
         }
-        // On 401, retry once with a fresh token (no force refresh this time to avoid loop)
         if (res.status === 401) {
           const retryRes = await checkAdmin(user.getIdToken.bind(user), false);
           if (cancelled) return;
@@ -56,6 +57,7 @@ export function useAdmin() {
               setAdminChecked(true);
               setIsAdmin(true);
               setLevel(retryData.level ?? null);
+              setBootstrapOwnerUid(retryData.bootstrapOwnerUid ?? null);
               return;
             }
           }
@@ -63,11 +65,13 @@ export function useAdmin() {
         setAdminChecked(true);
         setIsAdmin(false);
         setLevel(null);
+        setBootstrapOwnerUid(null);
       } catch {
         if (!cancelled) {
           setAdminChecked(true);
           setIsAdmin(false);
           setLevel(null);
+          setBootstrapOwnerUid(null);
         }
       }
     })();
@@ -80,6 +84,7 @@ export function useAdmin() {
   return {
     isAdmin,
     level,
+    bootstrapOwnerUid,
     adminChecked: adminChecked && !authLoading,
     loading: authLoading || (!!user && !adminChecked),
   };

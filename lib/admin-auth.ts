@@ -24,13 +24,18 @@ function getFirebaseAdminAuth() {
   return getAuth(getApps().find((a) => a.name === appName)!)
 }
 
-/** Resolve admin level for a verified uid: owner from env, else from Firestore admin_roles. */
+/** Bootstrap owner UID from env. Only this user can assign the Owner role to others. */
+export function getBootstrapOwnerUid(): string | null {
+  return getOwnerUid()
+}
+
+/** Resolve admin level: bootstrap owner from env, or owner/super_admin/event_admin from Firestore admin_roles. */
 export async function getAdminLevel(uid: string): Promise<AdminLevel | null> {
   if (getOwnerUid() === uid) return 'owner'
   const db = getVerceraFirestore()
   const doc = await db.collection('admin_roles').doc(uid).get()
   const role = doc.data()?.role
-  if (role === 'super_admin' || role === 'event_admin') return role
+  if (role === 'owner' || role === 'super_admin' || role === 'event_admin') return role
   return null
 }
 

@@ -5,18 +5,23 @@ import type { AdminLevel } from "@/lib/admin-auth";
 
 const ALLOWED_LEVELS: AdminLevel[] = ["owner", "super_admin"];
 
-/** GET: List admin roles. Owner sees all; super_admin sees only event_admins. */
+/** GET: List admin roles. Owner sees all; super_admin sees only event_admins. Returns ownerUids for filtering. */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminLevel(request, ALLOWED_LEVELS);
   if (auth instanceof NextResponse) return auth;
   try {
     const db = getVerceraFirestore();
     const snapshot = await db.collection("admin_roles").get();
+    const bootstrapUid = getOwnerUid();
+    const ownerUids: string[] = bootstrapUid ? [bootstrapUid] : [];
+    snapshot.docs.forEach((doc) => {
+      if (doc.data().role === "owner") ownerUids.push(doc.id);
+    });
     let list = snapshot.docs.map((doc) => {
       const d = doc.data();
       return {
         userId: doc.id,
-        role: d.role as "super_admin" | "event_admin",
+        role: d.role as "super_admin" | "event_admin" | "owner",
         email: d.email ?? null,
         fullName: d.fullName ?? null,
         addedAt: d.addedAt ?? null,
@@ -25,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (auth.level === "super_admin") {
       list = list.filter((a) => a.role === "event_admin");
     }
-    return NextResponse.json({ admins: list, ownerUid: getOwnerUid() });
+    return NextResponse.json({ admins: list, ownerUids });
   } catch (err) {
     console.error("Admin list error:", err);
     return NextResponse.json(
@@ -35,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST: Set or remove admin role for a participant (by userId). Only owner can set super_admin. */
+/** POST: Set or remove admin role. Only bootstrap owner (env) can assign Owner; owners can assign super_admin/event_admin. */
 export async function POST(request: NextRequest) {
   const auth = await requireAdminLevel(request, ALLOWED_LEVELS);
   if (auth instanceof NextResponse) return auth;
@@ -48,18 +53,26 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+    const isBootstrapOwner = getOwnerUid() === auth.uid;
     const role =
-      rawRole === "super_admin" || rawRole === "event_admin" ? rawRole : null;
-    if (
-      rawRole !== undefined &&
-      rawRole !== null &&
-      rawRole !== "" &&
-      role === null
-    ) {
+      rawRole === "owner" || rawRole === "super_admin" || rawRole === "event_admin"
+        ? rawRole
+        : rawRole === null || rawRole === undefined || rawRole === ""
+          ? null
+          : undefined;
+    if (role === undefined) {
       return NextResponse.json(
-        { error: "role must be super_admin, event_admin, or null" },
+        { error: "role must be owner, super_admin, event_admin, or null" },
         { status: 400 },
       );
+    }
+    if (role === "owner") {
+      if (!isBootstrapOwner) {
+        return NextResponse.json(
+          { error: "Only the primary owner can assign the Owner role" },
+          { status: 403 },
+        );
+      }
     }
     if (role === "super_admin" && auth.level !== "owner") {
       return NextResponse.json(
@@ -88,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     await db.collection("admin_roles").doc(userId).set({
-      role,
+      role: role as "owner" | "super_admin" | "event_admin",
       fullName,
       email,
       addedBy: auth.uid,
