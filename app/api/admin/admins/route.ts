@@ -41,21 +41,20 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
-    const { userId, role } = body as {
-      userId?: string;
-      role?: "super_admin" | "event_admin" | null;
-    };
+    const { userId, role: rawRole } = body as { userId?: string; role?: string | null };
     if (!userId || typeof userId !== "string") {
       return NextResponse.json(
         { error: "userId is required" },
         { status: 400 },
       );
     }
+    const role =
+      rawRole === "super_admin" || rawRole === "event_admin" ? rawRole : null;
     if (
-      role !== null &&
-      role !== undefined &&
-      role !== "super_admin" &&
-      role !== "event_admin"
+      rawRole !== undefined &&
+      rawRole !== null &&
+      rawRole !== "" &&
+      role === null
     ) {
       return NextResponse.json(
         { error: "role must be super_admin, event_admin, or null" },
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
     const fullName = participantData.fullName ?? null;
     const email = participantData.email ?? null;
 
-    if (role === null || role === undefined || role === "") {
+    if (role === null) {
       await db.collection("admin_roles").doc(userId).delete();
       return NextResponse.json({ success: true, message: "Role removed" });
     }
