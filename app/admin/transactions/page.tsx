@@ -79,36 +79,36 @@ export default function AdminTransactionsPage() {
   }))
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground flex items-center gap-2">
-          <Receipt className="h-7 w-7" />
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+          <Receipt className="h-6 w-6 sm:h-7 sm:w-7 shrink-0" />
           Transactions
         </h1>
-        <p className="text-foreground/60 mt-1">
+        <p className="text-foreground/60 mt-1 text-sm">
           Revenue breakdown and payment list
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="font-semibold text-foreground mb-2">Total revenue</h2>
-          <p className="text-3xl font-bold text-accent">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">Total revenue</h2>
+          <p className="text-xl sm:text-3xl font-bold text-accent truncate">
             ₹{stats.totalRevenue.toLocaleString('en-IN')}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="font-semibold text-foreground mb-2">Paid registrations</h2>
-          <p className="text-3xl font-bold text-foreground">{paidRegs.length}</p>
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">Paid</h2>
+          <p className="text-xl sm:text-3xl font-bold text-foreground">{paidRegs.length}</p>
         </div>
       </div>
 
       {eventChartData.length > 0 && (
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="font-semibold text-foreground mb-4">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-6">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base mb-3 sm:mb-4">
             Revenue by event (bar)
           </h2>
-          <div className="h-72">
+          <div className="h-56 sm:h-72 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={eventChartData} margin={{ top: 10, right: 10, left: 0, bottom: 30 }}>
                 <XAxis
@@ -136,11 +136,11 @@ export default function AdminTransactionsPage() {
       )}
 
       {pieData.length > 0 && (
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="font-semibold text-foreground mb-4">
-            Revenue share by event (pie)
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-6">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base mb-3 sm:mb-4">
+            Revenue share (pie)
           </h2>
-          <div className="h-72">
+          <div className="h-56 sm:h-72 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -174,12 +174,12 @@ export default function AdminTransactionsPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <h2 className="font-semibold text-foreground p-4 border-b border-border">
+      <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0">
+        <h2 className="font-semibold text-foreground text-sm sm:text-base p-3 sm:p-4 border-b border-border">
           Recent paid transactions
         </h2>
-        <div className="overflow-x-auto max-h-96 overflow-y-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-96">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-border bg-secondary/30">
                 <th className="text-left py-2 px-4 font-medium text-foreground/80">

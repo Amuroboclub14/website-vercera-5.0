@@ -221,51 +221,53 @@ export default function AdminScanPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 w-full max-w-2xl mx-auto">
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground flex items-center gap-2">
-          <QrCode className="h-7 w-7" />
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+          <QrCode className="h-6 w-6 sm:h-7 sm:w-7 shrink-0" />
           Ticket scanning
         </h1>
-        <p className="text-foreground/60 mt-1">
+        <p className="text-foreground/60 mt-1 text-sm sm:text-base">
           Enter or scan Vercera ID (participant) or Team ID (VT_…) to look up and mark attendance.
         </p>
       </div>
 
-      <form onSubmit={handleScan} className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
+      <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+        <div className="relative flex-1 w-full min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50 pointer-events-none" />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Vercera ID (e.g. VEC00001) or Team ID (VT_XXXXXXXX)"
+            placeholder="Vercera ID or Team ID (VT_…)"
             value={input}
             onChange={(e) => setInput(e.target.value.toUpperCase())}
-            className="w-full pl-10 pr-4 py-3 rounded-full border border-border bg-background text-foreground placeholder:text-foreground/40 font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+            className="w-full pl-10 pr-4 py-3 rounded-full border border-border bg-background text-foreground placeholder:text-foreground/40 font-mono text-base focus:outline-none focus:ring-2 focus:ring-accent touch-manipulation"
             autoFocus
           />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-3 rounded-full bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Looking up…' : 'Look up'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowScanner(true)}
-          className="px-6 py-3 rounded-full border border-border bg-background text-foreground font-medium hover:bg-secondary transition-colors flex items-center gap-2"
-        >
-          <Camera className="h-4 w-4" />
-          Scan QR
-        </button>
+        <div className="flex gap-2 sm:flex-shrink-0">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 sm:flex-none px-6 py-3 min-h-[48px] rounded-full bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors disabled:opacity-50 touch-manipulation active:scale-[0.98]"
+          >
+            {loading ? 'Looking up…' : 'Look up'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="flex-1 sm:flex-none px-6 py-3 min-h-[48px] rounded-full border border-border bg-background text-foreground font-medium hover:bg-secondary transition-colors flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]"
+          >
+            <Camera className="h-4 w-4" />
+            <span className="sm:inline">Scan QR</span>
+          </button>
+        </div>
       </form>
 
       {showScanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="relative w-full max-w-md rounded-2xl overflow-hidden bg-card border border-border shadow-xl">
-            <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4">
+          <div className="relative w-full max-h-[90vh] sm:max-h-none sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden bg-card border border-border shadow-xl flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30 shrink-0">
               <span className="font-medium text-foreground">Scan QR code</span>
               <button
                 type="button"
@@ -282,13 +284,13 @@ export default function AdminScanPage() {
                     setShowScanner(false)
                   }
                 }}
-                className="p-2 rounded-full hover:bg-secondary text-foreground"
+                className="p-2.5 min-w-[44px] min-h-[44px] rounded-full hover:bg-secondary text-foreground touch-manipulation flex items-center justify-center"
                 aria-label="Close scanner"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-4">
+            <div className="p-2 sm:p-4 overflow-auto min-h-0 flex-1">
               {cameraError ? (
                 <p className="text-sm text-destructive py-4">{cameraError}</p>
               ) : (
