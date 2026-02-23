@@ -259,7 +259,7 @@ export default function AdminEventsPage() {
                 <div className="flex gap-2 flex-wrap">
                   <Link
                     href={`/admin/registrations?eventId=${event.id}`}
-                    className="inline-flex items-center gap-1 text-sm text-accent hover:underline min-h-[36px] items-center touch-manipulation"
+                    className="inline-flex items-center gap-1 text-sm text-accent hover:underline min-h-[36px] touch-manipulation"
                   >
                     View registrations <ExternalLink className="h-3 w-3 shrink-0" />
                   </Link>

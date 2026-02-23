@@ -9,7 +9,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminLevel(request, ALLOWED_LEVELS)
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS])
   if (auth instanceof NextResponse) return auth
   try {
     const { id } = await params
@@ -37,7 +37,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminLevel(request, ALLOWED_LEVELS)
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS])
   if (auth instanceof NextResponse) return auth
   try {
     const { id } = await params
@@ -107,7 +107,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminLevel(request, ALLOWED_LEVELS)
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS])
   if (auth instanceof NextResponse) return auth
   try {
     const { id } = await params

@@ -7,7 +7,7 @@ const ALLOWED_LEVELS = ["owner", "super_admin"] as const;
 
 /** GET: List all events (admin). Same as public but requires auth. */
 export async function GET(request: NextRequest) {
-  const auth = await requireAdminLevel(request, ALLOWED_LEVELS);
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS]);
   if (auth instanceof NextResponse) return auth;
   try {
     const db = getVerceraFirestore();
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
 /** POST: Create event. Owner/super_admin only. */
 export async function POST(request: NextRequest) {
-  const auth = await requireAdminLevel(request, ALLOWED_LEVELS);
+  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS]);
   if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
