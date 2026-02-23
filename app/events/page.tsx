@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useEvents } from '@/hooks/use-events'
+import { EventsComingSoon } from '@/components/events-coming-soon'
 import { ArrowLeft, Users, Trophy, Clock, MapPin } from 'lucide-react'
 
 export default function EventsPage() {
@@ -22,6 +23,27 @@ export default function EventsPage() {
       <main className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-32 pb-20 text-center text-foreground/60">Loading events…</div>
+        <Footer />
+      </main>
+    )
+  }
+
+  if (!error && events.length === 0) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-28 pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-accent hover:text-accent/90 transition-colors mb-8 font-medium"
+            >
+              <ArrowLeft size={18} />
+              Back to Home
+            </Link>
+          </div>
+          <EventsComingSoon variant="page" showBackLink />
+        </div>
         <Footer />
       </main>
     )

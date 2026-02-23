@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useEvents } from '@/hooks/use-events'
+import { EventsComingSoon } from '@/components/events-coming-soon'
 import { ArrowRight, Users, Trophy } from 'lucide-react'
 import type { EventRecord } from '@/lib/events-types'
 const containerVariants = {
@@ -40,15 +41,18 @@ export function EventsSection() {
       </section>
     )
   }
-  if (error || events.length === 0) {
+  if (error) {
     return (
       <section id="events" className="py-20 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-foreground/70">{error || 'No events at the moment.'}</p>
+          <p className="text-foreground/70">{error}</p>
           <Link href="/events" className="inline-block mt-4 text-accent hover:underline">View events</Link>
         </div>
       </section>
     )
+  }
+  if (events.length === 0) {
+    return <EventsComingSoon variant="section" />
   }
 
   return (
