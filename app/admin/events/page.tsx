@@ -411,8 +411,8 @@ export default function AdminEventsPage() {
 
       {/* Modal: Add/Edit form — scrollable body */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center p-4 bg-black/60 overflow-hidden">
-          <div className="flex flex-col w-full max-w-2xl max-h-[90vh] bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-hidden">
+          <div className="flex flex-col w-full max-w-2xl h-[90vh] max-h-[90vh] bg-card border border-border rounded-2xl shadow-xl my-auto overflow-hidden flex-shrink-0">
             <div className="flex-shrink-0 px-4 py-3 border-b border-border flex items-center justify-between bg-card">
               <h2 className="font-semibold text-foreground">
                 {editingId ? 'Edit event' : 'Add event'}
@@ -426,8 +426,12 @@ export default function AdminEventsPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-y-auto">
-              <div className="p-4 space-y-4">
+            <div
+              className="min-h-0 flex-1 overflow-y-scroll overscroll-contain"
+              tabIndex={0}
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <form onSubmit={handleSubmit} className="p-4 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground/80 mb-1">Name *</label>
@@ -778,10 +782,10 @@ export default function AdminEventsPage() {
                     Cancel
                   </button>
                 </div>
-              </div>
             </form>
           </div>
         </div>
+      </div>
       )}
     </div>
   )
