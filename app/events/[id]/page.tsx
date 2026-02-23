@@ -272,20 +272,42 @@ export default function EventDetailPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Rulebook (optional) */}
-              {event.rulebookUrl && (
+              {/* Rulebook & attachments (optional) */}
+              {((event.rulebookUrls?.length ?? 0) > 0 || event.rulebookUrl) && (
                 <div className="space-y-4">
-                  <h2 className="font-display text-2xl font-bold text-foreground">Rulebook</h2>
-                  <div className="bg-secondary border border-border rounded-xl p-6">
-                    <a
-                      href={event.rulebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors"
-                    >
-                      <FileText size={20} />
-                      View / Download Rulebook
-                    </a>
+                  <h2 className="font-display text-2xl font-bold text-foreground">Rulebook & documents</h2>
+                  <div className="bg-secondary border border-border rounded-xl p-6 space-y-3">
+                    {(event.rulebookUrls?.length ? event.rulebookUrls : event.rulebookUrl ? [event.rulebookUrl] : []).map((url, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full sm:w-auto inline-flex items-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors"
+                      >
+                        <FileText size={20} />
+                        {event.rulebookUrls && event.rulebookUrls.length > 1 ? `Rulebook / doc ${i + 1}` : 'View / Download Rulebook'}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {((event.attachmentUrls?.length ?? 0) > 0) && (
+                <div className="space-y-4">
+                  <h2 className="font-display text-2xl font-bold text-foreground">Other attachments</h2>
+                  <div className="bg-secondary border border-border rounded-xl p-6 space-y-3">
+                    {event.attachmentUrls!.map((url, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full sm:w-auto inline-flex items-center gap-2 px-4 py-3 bg-secondary border border-border text-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                      >
+                        <FileText size={20} />
+                        Attachment {i + 1}
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
