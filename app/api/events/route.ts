@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const db = getVerceraFirestore()
     const [eventsSnap, regsSnap] = await Promise.all([
-      db.collection('events').orderBy('order', 'asc').orderBy('createdAt', 'asc').get(),
+      db.collection('events').get(),
       db.collection('registrations').get(),
     ])
 
@@ -19,7 +19,7 @@ export async function GET() {
       if (eid) countByEventId[eid] = (countByEventId[eid] || 0) + 1
     })
 
-    const events: EventRecord[] = eventsSnap.docs.map((doc) => {
+    const eventsList: EventRecord[] = eventsSnap.docs.map((doc) => {
       const d = doc.data()
       return {
         id: doc.id,
@@ -47,7 +47,14 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ events })
+    eventsList.sort((a, b) => {
+      const oa = a.order ?? 999
+      const ob = b.order ?? 999
+      if (oa !== ob) return oa - ob
+      return (a.createdAt || '').localeCompare(b.createdAt || '')
+    })
+
+    return NextResponse.json({ events: eventsList })
   } catch (err) {
     console.error('Events list error:', err)
     return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })
