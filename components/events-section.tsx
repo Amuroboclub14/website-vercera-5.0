@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEvents } from '@/hooks/use-events'
+import { EventsComingSoon } from '@/components/events-coming-soon'
 import { ArrowRight, Users, Trophy } from 'lucide-react'
 import type { EventRecord } from '@/lib/events-types'
 
@@ -11,7 +12,7 @@ export function EventsSection() {
   const nonTechnical = events.filter((e) => e.category === 'non-technical')
 
   if (loading) return <section id="events" className="py-20 bg-secondary/30"><div className="max-w-7xl mx-auto px-4 text-center text-foreground/60">Loading events…</div></section>
-  if (events.length === 0) return <section id="events" className="py-20 bg-secondary/30"><div className="max-w-7xl mx-auto px-4 text-center text-foreground/70">No events at the moment.</div></section>
+  if (events.length === 0) return <EventsComingSoon variant="section" />
 
   return (
     <section id="events" className="py-20 bg-secondary/30">

@@ -42,7 +42,7 @@ export default function EventsPage() {
               Back to Home
             </Link>
           </div>
-          <EventsComingSoon variant="page" showBackLink />
+          <EventsComingSoon variant="page" showBackLink={false} />
         </div>
         <Footer />
       </main>
