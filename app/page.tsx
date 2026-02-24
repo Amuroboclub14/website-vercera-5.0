@@ -13,7 +13,7 @@ export default function Page() {
       {/* Single continuous background for hero + events + FAQ — no seams */}
       <div>
         <AnimatedHeroBackground />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/60 via-background/40 to-background/60 pointer-events-none" aria-hidden />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/30 via-background/0 to-background/60 pointer-events-none" aria-hidden />
         <Hero />
         <EventsSection />
         <GallerySection />

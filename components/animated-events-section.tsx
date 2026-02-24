@@ -68,8 +68,10 @@ export function EventsSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="font-display text-4xl sm:text-5xl font-bold text-foreground mb-4">Featured Events</h2>
-          <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
+          <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-4">
+            Featured <span className="text-accent">Events</span>
+          </h2>
+          <p className="text-white/85 text-lg max-w-2xl mx-auto">
             Choose from a diverse range of technical and non-technical events designed to challenge and inspire.
           </p>
         </motion.div>

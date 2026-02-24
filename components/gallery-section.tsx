@@ -16,13 +16,10 @@ export function GallerySection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent/15 text-accent mb-4">
-            <Images className="w-6 h-6" />
-          </div>
-          <h2 className="font-display text-4xl sm:text-5xl font-bold text-foreground mb-4">
-            Memories from past editions
+          <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-4">
+            Memories from <span className="text-accent">past editions</span>
           </h2>
-          <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
+          <p className="text-white/85 text-lg max-w-2xl mx-auto">
             A glimpse of Vercera 4.0 and 3.0 — the energy, the events, and the community.
           </p>
         </motion.div>
@@ -41,7 +38,7 @@ export function GallerySection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="relative aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary group"
+              className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/20 bg-white/5 group"
             >
               <img
                 src={img.src}
