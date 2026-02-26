@@ -29,7 +29,7 @@ export function Navbar() {
   return (
     <>
       {/* Floating Pill Navbar */}
-      <div className="sticky top-4 left-0 right-0 z-50 flex justify-center px-4">
+      <div className="sticky top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4">
         <motion.nav
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
