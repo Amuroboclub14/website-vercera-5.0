@@ -31,14 +31,14 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-block transition-transform hover:scale-105"
               >
-              <Image
-                src="/amuroboclub.png"
-                alt="AMURoboclub"
-                width={200}
-                height={60}
-                quality={100}
-                className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
-              />
+                <Image
+                  src="/amuroboclub.png"
+                  alt="AMURoboclub"
+                  width={200}
+                  height={60}
+                  quality={100}
+                  className="h-8 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+                />
               </a>
             </div>
           </div>
@@ -58,15 +58,20 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/gallery" className="text-foreground/60 hover:text-accent transition-colors">
+                  Gallery
+                </Link>
+              </li>
+              <li>
                 <Link href="/#faq" className="text-foreground/60 hover:text-accent transition-colors">
                   FAQ
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/contact" className="text-foreground/60 hover:text-accent transition-colors">
                   Contact
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -77,14 +82,26 @@ export function Footer() {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="mailto:amuroboclub@gmail.com" className="text-foreground/60 hover:text-accent transition-colors break-all">
+                    amuroboclub@gmail.com
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Mail size={16} className="text-accent flex-shrink-0 mt-0.5" />
                   <a href="mailto:chairperson@amuroboclub.com" className="text-foreground/60 hover:text-accent transition-colors break-all">
                     chairperson@amuroboclub.com
                   </a>
                 </li>
                 <li className="flex items-start gap-2">
                   <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
-                  <a href="tel:+919999999999" className="text-foreground/60 hover:text-accent transition-colors">
-                    +91 9999 999 999
+                  <a href="tel:+916399454765" className="text-foreground/60 hover:text-accent transition-colors">
+                    +91 6399454765 (Avyukt Soni)
+                  </a>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Phone size={16} className="text-accent flex-shrink-0 mt-0.5" />
+                  <a href="tel:+919068139222" className="text-foreground/60 hover:text-accent transition-colors">
+                    +91 9068139222 (Aman Javed)
                   </a>
                 </li>
                 <li className="flex items-start gap-2">
@@ -115,14 +132,14 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center text-foreground/60 text-sm">
           <p>&copy; {currentYear} Vercera Technical Fest. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-accent transition-colors">
-              Twitter
+            <a href="https://chat.whatsapp.com/FntN1V4Z8FUBeng03hZ1vg?mode=gi_t" className="hover:text-accent transition-colors">
+              WhatsApp Community
             </a>
-            <a href="#" className="hover:text-accent transition-colors">
-              LinkedIn
-            </a>
-            <a href="#" className="hover:text-accent transition-colors">
+            <a href="https://www.instagram.com/amuroboclub" className="hover:text-accent transition-colors">
               Instagram
+            </a>
+            <a href="https://www.linkedin.com/company/amuroboclub" className="hover:text-accent transition-colors">
+              LinkedIn
             </a>
           </div>
         </div>

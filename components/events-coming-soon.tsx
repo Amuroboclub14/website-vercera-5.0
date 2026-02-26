@@ -23,7 +23,7 @@ export function EventsComingSoon({ variant = 'section', showBackLink = false }: 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/15 text-accent mb-8"
+        className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/25 text-accent mb-8"
       >
         <Calendar className="w-10 h-10" strokeWidth={1.5} />
       </motion.div>
@@ -31,10 +31,10 @@ export function EventsComingSoon({ variant = 'section', showBackLink = false }: 
         <Sparkles className="w-4 h-4" />
         Stay tuned
       </p>
-      <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-        Revealing soon
+      <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+        <span className="text-accent">Revealing soon</span>
       </h2>
-      <p className="text-foreground/70 text-lg sm:text-xl leading-relaxed mb-8">
+      <p className="text-white/85 text-lg sm:text-xl leading-relaxed mb-8">
         We&apos;re curating an incredible lineup of events for Vercera 5.0. 
         Check back soon—something amazing is in the works.
       </p>

@@ -233,7 +233,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="collegeName" className="block text-sm font-medium text-foreground">College Name *</label>
+                <label htmlFor="collegeName" className="block text-sm font-medium text-foreground">University/College Name *</label>
                 <input type="text" id="collegeName" name="collegeName" value={formData.collegeName} onChange={handleChange} placeholder="Your College" className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent" disabled={isLoading} required />
               </div>
 
