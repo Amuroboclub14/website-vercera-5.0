@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Images } from 'lucide-react'
 import { Navbar } from '@/components/animated-navbar'
@@ -66,11 +67,13 @@ export default function GalleryPage() {
               <CarouselContent className="-ml-2 sm:-ml-4">
                 {galleryImages.slice(0, 8).map((img) => (
                   <CarouselItem key={img.id} className="pl-2 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                    <div className="aspect-video rounded-xl overflow-hidden border border-border bg-secondary">
-                      <img
+                    <div className="aspect-video rounded-xl overflow-hidden border border-border bg-secondary relative">
+                      <Image
                         src={img.src}
                         alt={img.alt ?? `Gallery Vercera ${img.vercera}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover"
                       />
                     </div>
                   </CarouselItem>
@@ -122,10 +125,12 @@ function EditionGrid({
             transition={{ delay: i * 0.04, duration: 0.3 }}
             className="group relative aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary"
           >
-            <img
+            <Image
               src={img.src}
               alt={img.alt ?? title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </motion.div>
