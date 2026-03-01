@@ -22,6 +22,7 @@ export function Navbar() {
     { href: '/', label: 'Home' },
     { href: '/events', label: 'Events' },
     { href: '/gallery', label: 'Gallery' },
+    { href: '/sponsors', label: 'Sponsors' },
     { href: '/#faq', label: 'FAQ' },
   ]
 

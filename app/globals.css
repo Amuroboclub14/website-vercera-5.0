@@ -14,6 +14,16 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+::-webkit-scrollbar {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1e734;
+  border-radius: 20px;
+  width: 4;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

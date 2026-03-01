@@ -63,6 +63,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/sponsors" className="text-foreground/60 hover:text-accent transition-colors">
+                  Sponsors
+                </Link>
+              </li>
+              <li>
                 <Link href="/#faq" className="text-foreground/60 hover:text-accent transition-colors">
                   FAQ
                 </Link>
