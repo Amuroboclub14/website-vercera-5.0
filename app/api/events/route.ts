@@ -4,14 +4,21 @@ import type { EventRecord } from '@/lib/events-types'
 
 export const dynamic = 'force-dynamic'
 
-/** GET: List all events from Firestore with registeredCount. Public. */
+const SETTINGS_DOC = 'site'
+
+/** GET: List all events from Firestore with registeredCount. Public. Respects settings.eventsVisible. */
 export async function GET() {
   try {
     const db = getVerceraFirestore()
-    const [eventsSnap, regsSnap] = await Promise.all([
+    const [settingsSnap, eventsSnap, regsSnap] = await Promise.all([
+      db.collection('settings').doc(SETTINGS_DOC).get(),
       db.collection('events').get(),
       db.collection('registrations').get(),
     ])
+    const eventsVisible = settingsSnap.data()?.eventsVisible === true
+    if (!eventsVisible) {
+      return NextResponse.json({ events: [], eventsVisible: false })
+    }
 
     const countByEventId: Record<string, number> = {}
     regsSnap.docs.forEach((d) => {
@@ -61,7 +68,7 @@ export async function GET() {
       return (a.createdAt || '').localeCompare(b.createdAt || '')
     })
 
-    return NextResponse.json({ events: eventsList })
+    return NextResponse.json({ events: eventsList, eventsVisible: true })
   } catch (err) {
     console.error('Events list error:', err)
     return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })

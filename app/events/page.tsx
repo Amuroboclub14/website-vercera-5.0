@@ -13,7 +13,7 @@ import { formatPrizeAmount } from '@/lib/format-prize'
 
 export default function EventsPage() {
   const router = useRouter()
-  const { events, loading, error } = useEvents()
+  const { events, loading, error, showComingSoon } = useEvents()
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'technical' | 'non-technical'>('all')
 
   const filteredEvents =
@@ -29,7 +29,7 @@ export default function EventsPage() {
     )
   }
 
-  if (!error && events.length === 0) {
+  if (!error && showComingSoon) {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />

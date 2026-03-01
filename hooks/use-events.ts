@@ -5,6 +5,7 @@ import type { EventRecord } from '@/lib/events-types'
 
 export function useEvents() {
   const [events, setEvents] = useState<EventRecord[]>([])
+  const [eventsVisible, setEventsVisible] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,15 +15,19 @@ export function useEvents() {
       .then((data) => {
         if (data.error) throw new Error(data.error)
         setEvents(data.events || [])
+        setEventsVisible(data.eventsVisible === true)
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Failed to load events')
         setEvents([])
+        setEventsVisible(false)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  return { events, loading, error }
+  /** True when we should show "Revealing soon" (visibility off or no events). */
+  const showComingSoon = !eventsVisible || events.length === 0
+  return { events, loading, error, eventsVisible, showComingSoon }
 }
 
 export function useEvent(id: string | null) {

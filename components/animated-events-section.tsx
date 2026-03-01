@@ -29,7 +29,7 @@ const itemVariants = {
 }
 
 export function EventsSection() {
-  const { events, loading, error } = useEvents()
+  const { events, loading, error, showComingSoon } = useEvents()
   const technical = events.filter((e) => e.category === 'technical')
   const nonTechnical = events.filter((e) => e.category === 'non-technical')
 
@@ -52,7 +52,7 @@ export function EventsSection() {
       </section>
     )
   }
-  if (events.length === 0) {
+  if (showComingSoon) {
     return <EventsComingSoon variant="section" />
   }
 
