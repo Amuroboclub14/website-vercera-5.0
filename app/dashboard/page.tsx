@@ -20,6 +20,8 @@ interface Registration {
   status: 'registered' | 'paid' | 'completed'
   amount: number
   attended?: boolean
+  isTeamEvent?: boolean
+  teamId?: string
 }
 
 type TeamMember = {
@@ -74,6 +76,8 @@ export default function DashboardPage() {
             status: d.status || 'registered',
             amount: d.amount || 0,
             attended: d.attended || false,
+            isTeamEvent: d.isTeamEvent || false,
+            teamId: d.teamId,
           }
         })
         setRegistrations(regs)
