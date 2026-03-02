@@ -120,6 +120,8 @@ export async function POST(request: NextRequest) {
           .limit(1)
           .get()
         if (!existing.empty) continue
+        const eventSnap = await db.collection('events').doc(eid).get()
+        const isTeamEvent = Boolean(eventSnap.exists && (eventSnap.data()?.isTeamEvent === true))
         await db.collection('registrations').add({
           userId,
           verceraId: leaderVerceraId,
@@ -132,6 +134,7 @@ export async function POST(request: NextRequest) {
           razorpayOrderId: orderId,
           razorpayPaymentId: paymentId,
           bundleId,
+          isTeamEvent,
           additionalInfo: additionalInfo || null,
           createdAt: nowIso,
         })

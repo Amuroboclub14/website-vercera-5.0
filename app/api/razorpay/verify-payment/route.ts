@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
 
-    // Bundle purchase: create one registration per event in the bundle
+    // Bundle purchase: create one registration per event in the bundle (no team — user can form/join later)
     if (bundleId) {
       const events = await resolveBundleToEvents(bundleId)
       if (events.length === 0) {
@@ -129,6 +129,8 @@ export async function POST(request: NextRequest) {
           .limit(1)
           .get()
         if (!existing.empty) continue
+        const eventSnap = await db.collection('events').doc(eid).get()
+        const isTeamEvent = Boolean(eventSnap.exists && (eventSnap.data()?.isTeamEvent === true))
         await db.collection('registrations').add({
           userId,
           verceraId: leaderVerceraId,
@@ -141,6 +143,7 @@ export async function POST(request: NextRequest) {
           razorpayOrderId: orderId,
           razorpayPaymentId: paymentId,
           bundleId,
+          isTeamEvent,
           additionalInfo: additionalInfo || null,
           createdAt: nowIso,
         })
