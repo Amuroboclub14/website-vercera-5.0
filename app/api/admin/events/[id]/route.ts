@@ -106,6 +106,8 @@ export async function PUT(
     if (rulebookUrls !== undefined) data.rulebookUrls = Array.isArray(rulebookUrls) && rulebookUrls.length ? rulebookUrls : null
     if (attachmentUrls !== undefined) data.attachmentUrls = Array.isArray(attachmentUrls) && attachmentUrls.length ? attachmentUrls : null
     if (order !== undefined) data.order = order == null ? 0 : Number(order)
+    if (excludedFromTechnicalBundle !== undefined) data.excludedFromTechnicalBundle = Boolean(excludedFromTechnicalBundle)
+    if (includedInNonTechnicalBundle !== undefined) data.includedInNonTechnicalBundle = Boolean(includedInNonTechnicalBundle)
 
     await ref.update(data)
     return NextResponse.json({ success: true })
