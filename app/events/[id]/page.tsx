@@ -53,6 +53,12 @@ export default function EventDetailPage({ params }: Props) {
   const [registration, setRegistration] = useState<RegistrationDoc | null>(null)
   const [teamLoading, setTeamLoading] = useState(false)
   const [team, setTeam] = useState<TeamDoc | null>(null)
+  const [teamFormMode, setTeamFormMode] = useState<'idle' | 'form' | 'join'>('idle')
+  const [teamNameInput, setTeamNameInput] = useState('')
+  const [teamCodeInput, setTeamCodeInput] = useState('')
+  const [teamActionLoading, setTeamActionLoading] = useState(false)
+  const [teamActionError, setTeamActionError] = useState<string | null>(null)
+  const [registrationRefresh, setRegistrationRefresh] = useState(0)
 
   const teamSizeText = useMemo(() => {
     if (!event) return 'Solo'
@@ -122,7 +128,7 @@ export default function EventDetailPage({ params }: Props) {
     }
 
     run()
-  }, [user, event])
+  }, [user, event, registrationRefresh])
 
   if (loading) {
     return (
@@ -165,6 +171,54 @@ export default function EventDetailPage({ params }: Props) {
       router.push(`/login?redirect=/events/${event.id}`)
     } else {
       router.push(`/checkout/${event.id}`)
+    }
+  }
+
+  const handleFormTeam = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !event) return
+    setTeamActionError(null)
+    setTeamActionLoading(true)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/team/form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId: event.id, teamName: teamNameInput.trim() || undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to form team')
+      setTeamFormMode('idle')
+      setTeamNameInput('')
+      setRegistrationRefresh((c) => c + 1)
+    } catch (err) {
+      setTeamActionError(err instanceof Error ? err.message : 'Failed to form team')
+    } finally {
+      setTeamActionLoading(false)
+    }
+  }
+
+  const handleJoinTeam = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !event) return
+    setTeamActionError(null)
+    setTeamActionLoading(true)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/team/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId: event.id, teamCode: teamCodeInput.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to join team')
+      setTeamFormMode('idle')
+      setTeamCodeInput('')
+      setRegistrationRefresh((c) => c + 1)
+    } catch (err) {
+      setTeamActionError(err instanceof Error ? err.message : 'Failed to join team')
+    } finally {
+      setTeamActionLoading(false)
     }
   }
 
@@ -297,7 +351,7 @@ export default function EventDetailPage({ params }: Props) {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full sm:w-auto inline-flex items-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors"
+                        className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-3 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors"
                       >
                         <FileText size={20} />
                         {event.rulebookUrls && event.rulebookUrls.length > 1 ? `Rulebook / doc ${i + 1}` : 'View / Download Rulebook'}
@@ -316,7 +370,7 @@ export default function EventDetailPage({ params }: Props) {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full sm:w-auto inline-flex items-center gap-2 px-4 py-3 bg-secondary border border-border text-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                        className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-3 bg-secondary border border-border text-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
                       >
                         <FileText size={20} />
                         Attachment {i + 1}
@@ -401,8 +455,99 @@ export default function EventDetailPage({ params }: Props) {
                   </button>
                 )}
 
-                {/* Team Info (if registered as team) */}
-                {registration?.isTeamEvent && (
+                {/* Form / Join team (registered, team event, not in a team yet) */}
+                {registration && isTeamEvent && !registration.teamId && (
+                  <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-foreground font-semibold">
+                      <Users size={18} className="text-accent" />
+                      Form or join a team
+                    </div>
+                    <p className="text-sm text-foreground/70">
+                      You&apos;re registered. Create a team or join one with a Team ID.
+                    </p>
+                    {teamActionError && (
+                      <p className="text-sm text-destructive">{teamActionError}</p>
+                    )}
+                    {teamFormMode === 'idle' && (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTeamFormMode('form')}
+                          className="flex-1 px-3 py-2 rounded-lg border border-accent text-accent font-medium hover:bg-accent/10"
+                        >
+                          Form team
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTeamFormMode('join')}
+                          className="flex-1 px-3 py-2 rounded-lg border border-border text-foreground font-medium hover:bg-secondary"
+                        >
+                          Join team
+                        </button>
+                      </div>
+                    )}
+                    {teamFormMode === 'form' && (
+                      <form onSubmit={handleFormTeam} className="space-y-2">
+                        <input
+                          type="text"
+                          value={teamNameInput}
+                          onChange={(e) => setTeamNameInput(e.target.value)}
+                          placeholder="Team name (optional)"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                          disabled={teamActionLoading}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setTeamFormMode('idle'); setTeamActionError(null); }}
+                            className="px-3 py-2 rounded-lg border border-border text-foreground text-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={teamActionLoading}
+                            className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium disabled:opacity-50"
+                          >
+                            {teamActionLoading ? 'Creating…' : 'Create team'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                    {teamFormMode === 'join' && (
+                      <form onSubmit={handleJoinTeam} className="space-y-2">
+                        <input
+                          type="text"
+                          value={teamCodeInput}
+                          onChange={(e) => setTeamCodeInput(e.target.value)}
+                          placeholder="Team ID (e.g. VT_XXXXXXXX)"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                          disabled={teamActionLoading}
+                          required
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setTeamFormMode('idle'); setTeamActionError(null); setTeamCodeInput(''); }}
+                            className="px-3 py-2 rounded-lg border border-border text-foreground text-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={teamActionLoading}
+                            className="px-3 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium disabled:opacity-50"
+                          >
+                            {teamActionLoading ? 'Joining…' : 'Join team'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {/* Team Info (if registered and in a team) */}
+                {registration?.isTeamEvent && registration.teamId && (
                   <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2 text-foreground font-semibold">
                       <QrCode size={18} className="text-accent" />

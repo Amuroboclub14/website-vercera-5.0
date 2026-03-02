@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
         rulebookUrls: rulebookUrls.length ? rulebookUrls : undefined,
         attachmentUrls: Array.isArray(d.attachmentUrls) && d.attachmentUrls.length ? d.attachmentUrls : undefined,
         order: d.order != null ? Number(d.order) : undefined,
+        excludedFromTechnicalBundle: Boolean(d.excludedFromTechnicalBundle),
+        includedInNonTechnicalBundle: Boolean(d.includedInNonTechnicalBundle),
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       };
@@ -97,6 +99,8 @@ export async function POST(request: NextRequest) {
       rulebookUrls,
       attachmentUrls,
       order,
+      excludedFromTechnicalBundle,
+      includedInNonTechnicalBundle,
     } = body;
 
     if (!name || !category) {
@@ -128,6 +132,8 @@ export async function POST(request: NextRequest) {
       teamSizeMin: teamSizeMin != null ? Number(teamSizeMin) : undefined,
       teamSizeMax: teamSizeMax != null ? Number(teamSizeMax) : undefined,
       order: order != null ? Number(order) : 0,
+      excludedFromTechnicalBundle: Boolean(excludedFromTechnicalBundle),
+      includedInNonTechnicalBundle: Boolean(includedInNonTechnicalBundle),
       createdAt: now,
       updatedAt: now,
     };

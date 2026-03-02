@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { generateVerceraTeamId } from '@/lib/vercera-team-id'
+import { resolveBundleToEvents } from '@/lib/resolve-bundle'
 
 function getVerceraFirestore() {
   const appName = 'vercera-firestore'
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       eventName,
       amount,
       userId,
+      bundleId,
       team,
       // legacy / fallback fields
       teamName,
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
       eventName?: string
       amount?: number
       userId?: string
+      bundleId?: string
       team?: {
         isTeamEvent?: boolean
         teamName?: string
@@ -67,9 +70,15 @@ export async function POST(request: NextRequest) {
       additionalInfo?: string | null
     }
 
-    if (!orderId || !paymentId || !signature || !eventId || !eventName || !amount || !userId) {
+    if (!orderId || !paymentId || !signature || !amount || !userId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+    if (!bundleId && (!eventId || !eventName)) {
+      return NextResponse.json(
+        { error: 'eventId and eventName required when not using bundleId' },
         { status: 400 }
       )
     }
@@ -104,8 +113,45 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
 
-    const isTeamEvent = Boolean(team && team.isTeamEvent && team.members && team.members.length > 0)
+    // Bundle purchase: create one registration per event in the bundle (no team — user can form/join later)
+    if (bundleId) {
+      const events = await resolveBundleToEvents(bundleId)
+      if (events.length === 0) {
+        return NextResponse.json({ error: 'Bundle has no events or not found.' }, { status: 400 })
+      }
+      const totalAmount = Number(amount)
+      const perRegistration = totalAmount / events.length
+      const registrationsRef = db.collection('registrations')
+      for (const { eventId: eid, eventName: ename } of events) {
+        const existing = await registrationsRef
+          .where('userId', '==', userId)
+          .where('eventId', '==', eid)
+          .limit(1)
+          .get()
+        if (!existing.empty) continue
+        const eventSnap = await db.collection('events').doc(eid).get()
+        const isTeamEvent = Boolean(eventSnap.exists && (eventSnap.data()?.isTeamEvent === true))
+        await db.collection('registrations').add({
+          userId,
+          verceraId: leaderVerceraId,
+          eventId: eid,
+          eventName: ename,
+          amount: Math.round(perRegistration * 100) / 100,
+          registrationDate,
+          status: 'paid',
+          attended: false,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          bundleId,
+          isTeamEvent,
+          additionalInfo: additionalInfo || null,
+          createdAt: nowIso,
+        })
+      }
+      return NextResponse.json({ success: true, message: 'Payment verified and bundle registrations saved' })
+    }
 
+    const isTeamEvent = Boolean(team && team.isTeamEvent && team.members && team.members.length > 0)
     const registrationsRef = db.collection('registrations')
 
     // Guard: prevent duplicate registrations for this event

@@ -7,17 +7,10 @@ import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useEvent } from '@/hooks/use-events'
-import { ArrowLeft, AlertCircle, CheckCircle, X } from 'lucide-react'
+import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
 
 interface Props {
   params: Promise<{ eventId: string }>
-}
-
-type TeamMember = {
-  userId: string
-  verceraId: string
-  fullName: string
-  email: string
 }
 
 export default function CheckoutPage({ params }: Props) {
@@ -31,10 +24,6 @@ export default function CheckoutPage({ params }: Props) {
   const [formData, setFormData] = useState({
     additionalInfo: '',
   })
-  const [teamName, setTeamName] = useState('')
-  const [memberInput, setMemberInput] = useState('')
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-  const [memberError, setMemberError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -70,13 +59,9 @@ export default function CheckoutPage({ params }: Props) {
   }
 
   const isTeamEvent = event.isTeamEvent ?? false
-  const minTeamSize = isTeamEvent ? event.teamSizeMin ?? 1 : 1
-  const maxTeamSize = isTeamEvent ? event.teamSizeMax ?? minTeamSize : 1
-  const currentTeamSize = isTeamEvent ? 1 + teamMembers.length : 1
 
   const perPersonAmount = event.registrationFee
-  const baseAmount = isTeamEvent ? perPersonAmount * currentTeamSize : perPersonAmount
-  const totalAmount = Math.round(baseAmount * 1.18)
+  const totalAmount = perPersonAmount
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -86,97 +71,12 @@ export default function CheckoutPage({ params }: Props) {
     }))
   }
 
-  const handleAddMember = async () => {
-    const trimmed = memberInput.trim().toUpperCase()
-    if (!trimmed) return
-    setMemberError(null)
-
-    if (!profile) {
-      setMemberError('You must be logged in to add team members.')
-      return
-    }
-
-    if (trimmed === profile.verceraId) {
-      setMemberError('You are already the team leader.')
-      return
-    }
-
-    if (!isTeamEvent) {
-      setMemberError('This event does not use team registration.')
-      return
-    }
-
-    const nextSize = 1 + teamMembers.length + 1
-    if (nextSize > maxTeamSize) {
-      setMemberError(`Maximum team size is ${maxTeamSize}.`)
-      return
-    }
-
-    if (teamMembers.some((m) => m.verceraId === trimmed)) {
-      setMemberError('This member is already in the team.')
-      return
-    }
-
-    try {
-      const res = await fetch('/api/user/lookup-by-vercera-id', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verceraId: trimmed }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setMemberError(data.error || 'Failed to find participant.')
-        return
-      }
-
-      const data = await res.json()
-      const user = data.user as TeamMember
-
-      setTeamMembers((prev) => [...prev, user])
-      setMemberInput('')
-    } catch {
-      setMemberError('Failed to lookup participant. Please try again.')
-    }
-  }
-
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !profile || !event) return
 
-    if (isTeamEvent) {
-      const size = currentTeamSize
-      if (size < minTeamSize || size > maxTeamSize) {
-        setMemberError(`Team size must be between ${minTeamSize} and ${maxTeamSize} members (including you).`)
-        return
-      }
-      if (!teamName.trim()) {
-        setMemberError('Please enter a team name.')
-        return
-      }
-    }
-
     const baseUrl = (process.env.NEXT_PUBLIC_EV_CHECKOUT_URL || 'https://www.continuumworks.app').replace(/\/$/, '')
     const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard?payment=success` : 'https://www.vercera.in/dashboard?payment=success'
-
-    const teamPayload =
-      isTeamEvent && profile
-        ? {
-            isTeamEvent: true,
-            teamName: teamName.trim(),
-            teamSize: currentTeamSize,
-            members: [
-              {
-                userId: user.uid,
-                verceraId: profile.verceraId,
-                fullName: profile.fullName,
-                email: profile.email,
-                isLeader: true,
-              },
-              ...teamMembers.map((m) => ({ ...m, isLeader: false })),
-            ],
-          }
-        : null
 
     const params = new URLSearchParams({
       eventId: event.id,
@@ -187,9 +87,6 @@ export default function CheckoutPage({ params }: Props) {
       userName: profile.fullName || '',
       returnUrl,
     })
-    if (teamPayload) {
-      params.set('team', btoa(JSON.stringify(teamPayload)))
-    }
     if (formData.additionalInfo?.trim()) {
       params.set('additionalInfo', formData.additionalInfo.trim())
     }
@@ -259,95 +156,9 @@ export default function CheckoutPage({ params }: Props) {
                 ) : (
                   <form onSubmit={handlePayment} className="space-y-6">
                     {isTeamEvent && (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label htmlFor="teamName" className="block text-sm font-medium text-foreground">
-                            Team Name
-                          </label>
-                          <input
-                            type="text"
-                            id="teamName"
-                            value={teamName}
-                            onChange={(e) => setTeamName(e.target.value)}
-                            placeholder="Enter your team name"
-                            className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                            disabled={isLoading}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium text-foreground">
-                            Add Team Members by Vercera ID
-                          </label>
-                          <p className="text-xs text-foreground/60">
-                            You are counted as the team leader. Add between {minTeamSize} and {maxTeamSize} members in
-                            total (including you).
-                          </p>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={memberInput}
-                              onChange={(e) => setMemberInput(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault()
-                                  handleAddMember()
-                                }
-                              }}
-                              placeholder="Enter Vercera ID (e.g. V5_ABCDEFGH)"
-                              className="flex-1 px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-                              disabled={isLoading}
-                            />
-                            <button
-                              type="button"
-                              onClick={handleAddMember}
-                              disabled={isLoading}
-                              className="px-4 py-3 bg-accent text-accent-foreground rounded-full font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
-                            >
-                              Add
-                            </button>
-                          </div>
-                          {memberError && <p className="text-xs text-destructive mt-1">{memberError}</p>}
-
-                          {teamMembers.length > 0 && (
-                            <div className="mt-3 space-y-2">
-                              <p className="text-xs font-medium text-foreground/80">
-                                Team members ({currentTeamSize} / {maxTeamSize} including you):
-                              </p>
-                              <ul className="space-y-1 text-sm">
-                                <li className="flex items-center justify-between text-foreground/80">
-                                  <span>
-                                    {profile.fullName} <span className="text-xs text-foreground/50">(Leader)</span>
-                                  </span>
-                                  <span className="text-xs text-foreground/50">{profile.verceraId}</span>
-                                </li>
-                                {teamMembers.map((m) => (
-                                  <li key={m.userId} className="flex items-center justify-between gap-2 text-foreground/80">
-                                    <div className="flex flex-col">
-                                      <span>{m.fullName}</span>
-                                      <span className="text-xs text-foreground/50 truncate">{m.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs text-foreground/50">{m.verceraId}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setTeamMembers((prev) => prev.filter((member) => member.userId !== m.userId))
-                                        }
-                                        className="p-1 rounded-full hover:bg-destructive/10 text-destructive"
-                                        aria-label={`Remove ${m.fullName} from team`}
-                                        disabled={isLoading}
-                                      >
-                                        <X size={14} />
-                                      </button>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <p className="text-sm text-foreground/70 bg-accent/10 border border-accent/30 rounded-lg px-4 py-3">
+                        This is a team event. Register and pay here individually. After payment, you can form or join a team from the event page or your dashboard.
+                      </p>
                     )}
 
                     <div className="space-y-2">
@@ -417,11 +228,7 @@ export default function CheckoutPage({ params }: Props) {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-foreground/70">Registration Fee</span>
-                    <span className="font-semibold text-foreground">₹{event.registrationFee}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-foreground/70">GST (18%)</span>
-                    <span className="font-semibold text-foreground">₹{Math.round(event.registrationFee * 0.18)}</span>
+                    <span className="font-semibold text-foreground">₹{totalAmount}</span>
                   </div>
                 </div>
 

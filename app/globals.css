@@ -16,12 +16,12 @@ body {
 
 ::-webkit-scrollbar {
   background: transparent;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #c1e734;
   border-radius: 20px;
-  width: 4;
 }
 
 @layer utilities {

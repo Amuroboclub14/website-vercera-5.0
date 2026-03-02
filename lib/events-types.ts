@@ -29,6 +29,10 @@ export interface EventRecord {
   attachmentUrls?: string[]
   /** Display order (lower first). */
   order?: number
+  /** Exclude from "all technical" bundle (e.g. Sumo Bots, Robowars sold separately). */
+  excludedFromTechnicalBundle?: boolean
+  /** Include in non-technical bundle (admin chooses which events). */
+  includedInNonTechnicalBundle?: boolean
   createdAt?: string
   updatedAt?: string
 }

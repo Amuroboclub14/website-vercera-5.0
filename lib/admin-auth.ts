@@ -63,6 +63,20 @@ export async function verifyAdminToken(request: NextRequest): Promise<string | n
   return result ? result.uid : null
 }
 
+/** Returns uid if request has valid Firebase ID token (any user); otherwise null. */
+export async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
+  try {
+    const authHeader = request.headers.get('Authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    if (!token) return null
+    const auth = getFirebaseAdminAuth()
+    const decoded = await auth.verifyIdToken(token)
+    return decoded.uid
+  } catch {
+    return null
+  }
+}
+
 export function unauthorizedResponse() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }

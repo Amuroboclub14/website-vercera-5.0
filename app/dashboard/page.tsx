@@ -20,6 +20,8 @@ interface Registration {
   status: 'registered' | 'paid' | 'completed'
   amount: number
   attended?: boolean
+  isTeamEvent?: boolean
+  teamId?: string
 }
 
 type TeamMember = {
@@ -74,6 +76,8 @@ export default function DashboardPage() {
             status: d.status || 'registered',
             amount: d.amount || 0,
             attended: d.attended || false,
+            isTeamEvent: d.isTeamEvent || false,
+            teamId: d.teamId,
           }
         })
         setRegistrations(regs)
@@ -348,10 +352,15 @@ export default function DashboardPage() {
                             <div className="text-accent">{reg.status === 'paid' ? <CheckCircle size={20} /> : <Clock size={20} />}</div>
                           </div>
                         </div>
-                        <div className="mt-4 flex gap-3">
+                        <div className="mt-4 flex flex-wrap gap-3">
                           <Link href={`/events/${reg.eventId}`} className="px-4 py-2 bg-secondary text-foreground rounded-full text-sm font-medium hover:bg-secondary/80 transition-colors">
                             View Event
                           </Link>
+                          {reg.status === 'paid' && reg.isTeamEvent && !reg.teamId && (
+                            <Link href={`/events/${reg.eventId}#team`} className="px-4 py-2 bg-accent/20 text-accent rounded-full text-sm font-medium hover:bg-accent/30 transition-colors">
+                              Form or join team
+                            </Link>
+                          )}
                         </div>
                       </div>
                     ))}
