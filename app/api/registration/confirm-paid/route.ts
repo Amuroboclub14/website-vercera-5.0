@@ -104,6 +104,41 @@ export async function POST(request: NextRequest) {
 
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
+
+    if (bundleId) {
+      const events = await resolveBundleToEvents(bundleId)
+      if (events.length === 0) {
+        return NextResponse.json({ error: 'Bundle has no events or not found.' }, { status: 400 })
+      }
+      const totalAmount = Number(amount)
+      const perRegistration = totalAmount / events.length
+      const registrationsRef = db.collection('registrations')
+      for (const { eventId: eid, eventName: ename } of events) {
+        const existing = await registrationsRef
+          .where('userId', '==', userId)
+          .where('eventId', '==', eid)
+          .limit(1)
+          .get()
+        if (!existing.empty) continue
+        await db.collection('registrations').add({
+          userId,
+          verceraId: leaderVerceraId,
+          eventId: eid,
+          eventName: ename,
+          amount: Math.round(perRegistration * 100) / 100,
+          registrationDate,
+          status: 'paid',
+          attended: false,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          bundleId,
+          additionalInfo: additionalInfo || null,
+          createdAt: nowIso,
+        })
+      }
+      return NextResponse.json({ success: true, message: 'Payment verified and bundle registrations saved' })
+    }
+
     const isTeamEvent = Boolean(team && team.isTeamEvent && team.members && team.members.length > 0)
     const registrationsRef = db.collection('registrations')
 
