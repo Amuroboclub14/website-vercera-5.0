@@ -21,6 +21,7 @@ export function Navbar() {
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/events', label: 'Events' },
+    { href: '/packs', label: 'Packs' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/sponsors', label: 'Sponsors' },
     { href: '/#faq', label: 'FAQ' },
