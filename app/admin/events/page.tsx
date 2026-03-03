@@ -184,6 +184,16 @@ export default function AdminEventsPage() {
     }
   }, [modalOpen])
 
+  useEffect(() => {
+    if (modalOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [modalOpen])
+
   async function uploadFilesToEvent(eventId: string): Promise<{ eventImages: string[]; rulebookUrls: string[]; attachmentUrls: string[] }> {
     const existingImages = form.eventImages || (form.image ? [form.image] : [])
     const existingRulebook = form.rulebookUrls || []
@@ -482,8 +492,11 @@ export default function AdminEventsPage() {
       {modalOpen &&
         typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-            <div className="flex flex-col w-full max-w-2xl max-h-[90vh] my-auto bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex-shrink-0">
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 overflow-hidden"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col w-full max-w-2xl h-[90vh] max-h-[90vh] my-auto bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex-shrink-0">
             <div className="flex-shrink-0 px-4 py-3 border-b border-border flex items-center justify-between bg-card">
               <h2 className="font-semibold text-foreground">
                 {editingId ? 'Edit event' : 'Add event'}
@@ -880,8 +893,9 @@ export default function AdminEventsPage() {
             </form>
           </div>
         </div>
-      </div>
-      )}
+      </div>,
+          document.body
+        )}
     </div>
   )
 }
