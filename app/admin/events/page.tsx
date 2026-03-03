@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import {
   Calendar,
@@ -66,6 +67,7 @@ export default function AdminEventsPage() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const rulebookInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
+  const modalScrollRef = useRef<HTMLDivElement>(null)
   const [eventsVisible, setEventsVisible] = useState<boolean>(false)
   const [visibilityLoading, setVisibilityLoading] = useState(false)
 
@@ -172,6 +174,25 @@ export default function AdminEventsPage() {
     setModalOpen(false)
     setEditingId(null)
   }
+
+  useEffect(() => {
+    if (modalOpen && modalScrollRef.current) {
+      const t = requestAnimationFrame(() => {
+        modalScrollRef.current?.focus({ preventScroll: true })
+      })
+      return () => cancelAnimationFrame(t)
+    }
+  }, [modalOpen])
+
+  useEffect(() => {
+    if (modalOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [modalOpen])
 
   async function uploadFilesToEvent(eventId: string): Promise<{ eventImages: string[]; rulebookUrls: string[]; attachmentUrls: string[] }> {
     const existingImages = form.eventImages || (form.image ? [form.image] : [])
@@ -467,10 +488,15 @@ export default function AdminEventsPage() {
         </div>
       )}
 
-      {/* Modal: Add/Edit form — scrollable body */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-hidden">
-          <div className="flex flex-col w-full max-w-2xl h-[90vh] max-h-[90vh] bg-card border border-border rounded-2xl shadow-xl my-auto overflow-hidden flex-shrink-0">
+      {/* Modal: Add/Edit form — portaled to body so it stays fixed; scrollable body */}
+      {modalOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 overflow-hidden"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col w-full max-w-2xl h-[90vh] max-h-[90vh] my-auto bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex-shrink-0">
             <div className="flex-shrink-0 px-4 py-3 border-b border-border flex items-center justify-between bg-card">
               <h2 className="font-semibold text-foreground">
                 {editingId ? 'Edit event' : 'Add event'}
@@ -485,9 +511,12 @@ export default function AdminEventsPage() {
               </button>
             </div>
             <div
-              className="min-h-0 flex-1 overflow-y-scroll overscroll-contain"
+              ref={modalScrollRef}
+              className="scroll-area-touch flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               tabIndex={0}
               style={{ WebkitOverflowScrolling: 'touch' }}
+              role="region"
+              aria-label="Event form"
             >
               <form onSubmit={handleSubmit} className="p-4 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -864,8 +893,9 @@ export default function AdminEventsPage() {
             </form>
           </div>
         </div>
-      </div>
-      )}
+      </div>,
+          document.body
+        )}
     </div>
   )
 }

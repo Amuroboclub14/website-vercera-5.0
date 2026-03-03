@@ -123,7 +123,7 @@ export default function AdminLayout({
   )
 
   return (
-    <div className="min-h-[100dvh] md:h-dvh md:overflow-hidden bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {/* Mobile header */}
       <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm pt-[env(safe-area-inset-top)]">
         <Link href="/admin" className="font-display font-bold text-lg text-foreground" onClick={() => setMenuOpen(false)}>
@@ -149,7 +149,7 @@ export default function AdminLayout({
       )}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-[min(280px,85vw)] max-w-full flex flex-col border-r border-border bg-card shadow-xl transition-transform duration-200 ease-out md:relative md:z-auto md:translate-x-0 md:shadow-none md:w-56 md:min-h-0 md:flex-shrink-0',
+          'fixed top-0 left-0 z-50 h-full w-[min(280px,85vw)] max-w-full flex flex-col border-r border-border bg-card shadow-xl transition-transform duration-200 ease-out md:relative md:z-auto md:translate-x-0 md:shadow-none md:w-56 md:flex-shrink-0 md:sticky md:top-0 md:self-start md:min-h-screen',
           menuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -166,12 +166,12 @@ export default function AdminLayout({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto md:overflow-visible">
           <NavLinks />
         </nav>
       </aside>
 
-      <main className="flex-1 min-h-0 overflow-auto p-4 sm:p-6 md:p-8 pb-[env(safe-area-inset-bottom)] min-w-0">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 pb-[env(safe-area-inset-bottom)]">
         {children}
       </main>
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Package, Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import type { BundleRecord, BundleType } from '@/lib/bundles-types'
@@ -58,6 +59,16 @@ export default function AdminBundlesPage() {
     loadBundles()
     loadEvents()
   }, [loadBundles, loadEvents])
+
+  useEffect(() => {
+    if (modalOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [modalOpen])
 
   const openCreate = () => {
     setEditingId(null)
@@ -225,16 +236,26 @@ export default function AdminBundlesPage() {
         </div>
       )}
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg my-8">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h2 className="font-semibold text-foreground">{editingId ? 'Edit bundle' : 'Add bundle'}</h2>
-              <button type="button" onClick={closeModal} className="p-2 rounded-lg hover:bg-secondary text-foreground" aria-label="Close">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+      {modalOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 overflow-hidden"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col w-full max-w-lg h-[90vh] max-h-[90vh] my-auto bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex-shrink-0">
+              <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
+                <h2 className="font-semibold text-foreground">{editingId ? 'Edit bundle' : 'Add bundle'}</h2>
+                <button type="button" onClick={closeModal} className="p-2 rounded-lg hover:bg-secondary text-foreground" aria-label="Close">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div
+                className="scroll-area-touch flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain focus:outline-none"
+                tabIndex={0}
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+              <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1">Name *</label>
                 <input
@@ -320,9 +341,11 @@ export default function AdminBundlesPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
