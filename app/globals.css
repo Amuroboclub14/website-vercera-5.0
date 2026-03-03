@@ -41,6 +41,15 @@ body {
     backdrop-filter: blur(12px);
     border-radius: 9999px;
   }
+
+  /* Admin and modal scroll: ensure wheel/touch scroll works */
+  .scroll-area-touch {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
 }
 
 @layer base {

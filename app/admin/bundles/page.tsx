@@ -226,14 +226,19 @@ export default function AdminBundlesPage() {
       )}
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-          <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg my-8">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-hidden">
+          <div className="flex flex-col w-full max-w-lg max-h-[90vh] bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border">
               <h2 className="font-semibold text-foreground">{editingId ? 'Edit bundle' : 'Add bundle'}</h2>
               <button type="button" onClick={closeModal} className="p-2 rounded-lg hover:bg-secondary text-foreground" aria-label="Close">
                 <X className="h-5 w-5" />
               </button>
             </div>
+            <div
+              className="scroll-area-touch flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain focus:outline-none"
+              tabIndex={0}
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground/80 mb-1">Name *</label>
@@ -320,6 +325,7 @@ export default function AdminBundlesPage() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
