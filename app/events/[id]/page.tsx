@@ -165,6 +165,7 @@ export default function EventDetailPage({ params }: Props) {
   const registrationPercentage = event.maxParticipants > 0 ? (registeredCount / event.maxParticipants) * 100 : 0
   const spotsAvailable = event.maxParticipants - registeredCount
   const isTeamEvent = event.isTeamEvent ?? false
+  const isPaidRegistration = registration && (registration.status === 'paid' || registration.status === 'completed')
 
   const handleRegisterClick = () => {
     if (!user) {
@@ -389,7 +390,7 @@ export default function EventDetailPage({ params }: Props) {
                   <div className="bg-secondary rounded-lg p-4 text-sm text-foreground/70">
                     Checking your registration…
                   </div>
-                ) : registration ? (
+                ) : isPaidRegistration ? (
                   <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 space-y-2">
                     <div className="flex items-center gap-2 text-accent font-semibold">
                       <BadgeCheck size={18} />
@@ -433,7 +434,7 @@ export default function EventDetailPage({ params }: Props) {
                 </div>
 
                 {/* CTA Button */}
-                {registration ? (
+                {isPaidRegistration ? (
                   <button
                     disabled
                     className="w-full px-6 py-3 bg-accent/20 text-accent rounded-full font-bold cursor-not-allowed flex items-center justify-center gap-2"
@@ -456,7 +457,7 @@ export default function EventDetailPage({ params }: Props) {
                 )}
 
                 {/* Form / Join team (registered, team event, not in a team yet) */}
-                {registration && isTeamEvent && !registration.teamId && (
+                {isPaidRegistration && isTeamEvent && !registration.teamId && (
                   <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2 text-foreground font-semibold">
                       <Users size={18} className="text-accent" />
@@ -547,7 +548,7 @@ export default function EventDetailPage({ params }: Props) {
                 )}
 
                 {/* Team Info (if registered and in a team) */}
-                {registration?.isTeamEvent && registration.teamId && (
+                {isPaidRegistration && registration?.isTeamEvent && registration.teamId && (
                   <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-2 text-foreground font-semibold">
                       <QrCode size={18} className="text-accent" />

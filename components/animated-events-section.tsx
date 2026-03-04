@@ -3,8 +3,9 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useEvents } from '@/hooks/use-events'
+import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { EventsComingSoon } from '@/components/events-coming-soon'
-import { ArrowRight, Users, Trophy } from 'lucide-react'
+import { ArrowRight, Users, Trophy, BadgeCheck } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
 const containerVariants = {
@@ -30,6 +31,7 @@ const itemVariants = {
 
 export function EventsSection() {
   const { events, loading, error, showComingSoon } = useEvents()
+  const { registeredEventIds } = useMyRegistrations()
   const technical = events.filter((e) => e.category === 'technical')
   const nonTechnical = events.filter((e) => e.category === 'non-technical')
 
@@ -100,7 +102,7 @@ export function EventsSection() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:pointer-events-auto"
           >
             {technical.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} isRegistered={registeredEventIds.has(event.id)} />
             ))}
           </motion.div>
         </div>
@@ -124,7 +126,7 @@ export function EventsSection() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:pointer-events-auto"
           >
             {nonTechnical.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} isRegistered={registeredEventIds.has(event.id)} />
             ))}
           </motion.div>
         </div>
@@ -154,9 +156,10 @@ export function EventsSection() {
 
 interface EventCardProps {
   event: EventRecord
+  isRegistered?: boolean
 }
 
-function EventCard({ event }: EventCardProps) {
+function EventCard({ event, isRegistered }: EventCardProps) {
   const count = event.registeredCount ?? 0
   const registrationPercentage = event.maxParticipants > 0 ? (count / event.maxParticipants) * 100 : 0
 
@@ -181,7 +184,17 @@ function EventCard({ event }: EventCardProps) {
                 {event.category === 'technical' ? '⚙️' : '🎮'}
               </motion.div>
             )}
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+              {isRegistered && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="px-3 py-1 bg-accent/20 text-accent text-xs font-bold rounded-full flex items-center gap-1"
+                >
+                  <BadgeCheck size={12} />
+                  Registered
+                </motion.span>
+              )}
               <motion.span
                 whileHover={{ scale: 1.1 }}
                 className="px-3 py-1 bg-accent text-accent-foreground text-xs font-bold rounded-full"
@@ -251,13 +264,20 @@ function EventCard({ event }: EventCardProps) {
 
             {/* CTA Button */}
             <div className="pt-4 mt-auto">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-2 bg-accent/10 text-accent border border-accent rounded-full font-medium hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
-              >
-                View Details
-              </motion.button>
+              {isRegistered ? (
+                <div className="w-full px-4 py-2 bg-accent/20 text-accent border border-accent/50 rounded-full font-medium text-center text-sm flex items-center justify-center gap-1.5">
+                  <BadgeCheck size={16} />
+                  Registered
+                </div>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2 bg-accent/10 text-accent border border-accent rounded-full font-medium hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
+                >
+                  View Details
+                </motion.button>
+              )}
             </div>
           </div>
         </div>

@@ -7,13 +7,15 @@ import { motion } from 'framer-motion'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useEvents } from '@/hooks/use-events'
+import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { EventsComingSoon } from '@/components/events-coming-soon'
-import { ArrowLeft, Users, Trophy, Clock, MapPin } from 'lucide-react'
+import { ArrowLeft, Users, Trophy, Clock, MapPin, BadgeCheck } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 
 export default function EventsPage() {
   const router = useRouter()
   const { events, loading, error, showComingSoon } = useEvents()
+  const { registeredEventIds } = useMyRegistrations()
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'technical' | 'non-technical'>('all')
 
   const filteredEvents =
@@ -185,15 +187,25 @@ export default function EventsPage() {
                         <p className="text-foreground/60 text-xs">Fee</p>
                         <p className="font-bold text-accent text-lg">₹{event.registrationFee}</p>
                       </div>
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Link
-                          href={`/checkout/${event.id}`}
+                      {registeredEventIds.has(event.id) ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent/20 text-accent rounded-lg font-semibold text-sm cursor-default"
                           onClick={(e) => e.stopPropagation()}
-                          className="px-5 py-2 bg-accent text-accent-foreground rounded-lg font-semibold hover:bg-accent/90 transition-all text-sm"
                         >
-                          Register
-                        </Link>
-                      </motion.div>
+                          <BadgeCheck size={16} />
+                          Registered
+                        </span>
+                      ) : (
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Link
+                            href={`/checkout/${event.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-5 py-2 bg-accent text-accent-foreground rounded-lg font-semibold hover:bg-accent/90 transition-all text-sm"
+                          >
+                            Register
+                          </Link>
+                        </motion.div>
+                      )}
                     </div>
                   </div>
                 </motion.div>
