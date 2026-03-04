@@ -81,16 +81,85 @@ export default function AdminRegistrationsPage() {
     )
   })
 
+  const handleExportCsv = () => {
+    if (filtered.length === 0) {
+      alert('No registrations to export for the current filters.')
+      return
+    }
+
+    const escape = (value: unknown) => {
+      const str = value == null ? '' : String(value)
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`
+      }
+      return str
+    }
+
+    const header = [
+      'Participant',
+      'Vercera ID',
+      'Email',
+      'Event',
+      'Pack',
+      'Accommodation',
+      'Status',
+      'Amount',
+      'Attended',
+      'Order ID',
+      'Created At',
+    ]
+
+    const lines = [
+      header.join(','),
+      ...filtered.map((r) =>
+        [
+          r.participantName ?? '',
+          r.verceraId ?? '',
+          r.participantEmail ?? '',
+          r.eventName || r.eventId || '',
+          r.bundleName ?? '',
+          r.hasAccommodation ? 'Yes' : 'No',
+          r.status ?? '',
+          r.amount != null ? String(r.amount) : '',
+          r.attended ? 'Yes' : 'No',
+          r.razorpayOrderId ?? '',
+          r.createdAt ?? '',
+        ]
+          .map(escape)
+          .join(',')
+      ),
+    ]
+
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'registrations.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-          <ListChecks className="h-6 w-6 sm:h-7 sm:w-7 shrink-0" />
-          Registrations
-        </h1>
-        <p className="text-foreground/60 mt-1 text-sm">
-          All event applications. Filter and search below.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+            <ListChecks className="h-6 w-6 sm:h-7 sm:w-7 shrink-0" />
+            Registrations
+          </h1>
+          <p className="text-foreground/60 mt-1 text-sm">
+            All event applications. Filter and search below.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          className="inline-flex items-center justify-center px-4 py-2 rounded-full border border-border bg-secondary text-foreground text-sm font-medium hover:bg-secondary/80 transition-colors"
+        >
+          Export CSV
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
