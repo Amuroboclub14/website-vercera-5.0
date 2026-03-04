@@ -179,7 +179,7 @@ export default function AdminTransactionsPage() {
         <h2 className="font-semibold text-foreground text-sm sm:text-base p-3 sm:p-4 border-b border-border">
           Recent paid transactions
         </h2>
-        <div className="overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-96">
+        <div className="scroll-area-touch overflow-x-auto overflow-y-auto max-h-[50vh] sm:max-h-96">
           <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-border bg-secondary/30">

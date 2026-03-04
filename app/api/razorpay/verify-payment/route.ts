@@ -4,6 +4,7 @@ import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admi
 import { getFirestore } from 'firebase-admin/firestore'
 import { generateVerceraTeamId } from '@/lib/vercera-team-id'
 import { resolveBundleToEvents } from '@/lib/resolve-bundle'
+import { splitAmountExactly } from '@/lib/bundle-amount-split'
 
 function getVerceraFirestore() {
   const appName = 'vercera-firestore'
@@ -113,16 +114,18 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
 
-    // Bundle purchase: create one registration per event in the bundle (no team — user can form/join later)
+    // Bundle purchase: create one registration per event in the bundle (no team — user can form/join later).
+    // Split amount so sum of per-event amounts equals total (avoids 299/14 → 21.36 each summing to 299.04).
     if (bundleId) {
       const events = await resolveBundleToEvents(bundleId)
       if (events.length === 0) {
         return NextResponse.json({ error: 'Bundle has no events or not found.' }, { status: 400 })
       }
       const totalAmount = Number(amount)
-      const perRegistration = totalAmount / events.length
+      const amounts = splitAmountExactly(totalAmount, events.length)
       const registrationsRef = db.collection('registrations')
-      for (const { eventId: eid, eventName: ename } of events) {
+      for (let i = 0; i < events.length; i++) {
+        const { eventId: eid, eventName: ename } = events[i]
         const existing = await registrationsRef
           .where('userId', '==', userId)
           .where('eventId', '==', eid)
@@ -136,7 +139,7 @@ export async function POST(request: NextRequest) {
           verceraId: leaderVerceraId,
           eventId: eid,
           eventName: ename,
-          amount: Math.round(perRegistration * 100) / 100,
+          amount: amounts[i],
           registrationDate,
           status: 'paid',
           attended: false,

@@ -124,7 +124,7 @@ export default function AdminRegistrationsPage() {
         <div className="py-12 text-center text-foreground/60">Loading...</div>
       ) : (
         <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0">
-          <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+          <div className="scroll-area-touch overflow-x-auto overflow-y-auto max-h-[70vh]">
             <table className="w-full text-sm min-w-[700px]">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b border-border bg-secondary/30">

@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
             <Calendar className="h-4 w-4 shrink-0" />
             Revenue by Event
           </h2>
-          <div className="mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+          <div className="scroll-area-touch mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
             {Object.entries(stats.eventWise).length === 0 ? (
               <p className="text-foreground/50 text-sm">No data yet</p>
             ) : (
@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
             <ListChecks className="h-4 w-4 shrink-0" />
             Recent Registrations
           </h2>
-          <div className="mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+          <div className="scroll-area-touch mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
             {stats.recentRegistrations.length === 0 ? (
               <p className="text-foreground/50 text-sm">No registrations yet</p>
             ) : (
