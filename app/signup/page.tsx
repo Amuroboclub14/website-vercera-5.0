@@ -4,9 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { generateVerceraId } from '@/lib/vercera-id'
 import { verifyAMURoboclubMember } from '@/lib/verification'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
@@ -97,29 +96,15 @@ export default function SignupPage() {
     }
 
     try {
-      // Generate unique Vercera ID
-      let verceraId = generateVerceraId()
-      let isUnique = false
-      let attempts = 0
-      const maxAttempts = 10
-
-      // Ensure Vercera ID is unique
-      while (!isUnique && attempts < maxAttempts) {
-        const checkQuery = query(collection(db, 'vercera_5_participants'), where('verceraId', '==', verceraId))
-        const snapshot = await getDocs(checkQuery)
-        if (snapshot.empty) {
-          isUnique = true
-        } else {
-          verceraId = generateVerceraId()
-          attempts++
-        }
-      }
-
-      if (!isUnique) {
-        setError('Failed to generate unique ID. Please try again.')
+      // Get a unique Vercera ID from the server (client cannot query Firestore before auth)
+      const allocRes = await fetch('/api/signup/allocate-vercera-id', { method: 'POST' })
+      const allocData = await allocRes.json().catch(() => ({}))
+      if (!allocRes.ok || !allocData.verceraId) {
+        setError(allocData.error || 'Could not reserve your ID. Please try again.')
         setIsLoading(false)
         return
       }
+      const verceraId = allocData.verceraId as string
 
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email.trim(), formData.password)
       const user = userCredential.user
@@ -154,12 +139,22 @@ export default function SignupPage() {
       router.push('/dashboard')
     } catch (err: unknown) {
       const code = err && typeof err === 'object' && 'code' in err ? (err as { code: string }).code : ''
+      const message = err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : ''
+      console.error('[Signup] Registration error:', code, message, err)
       if (code === 'auth/email-already-in-use') {
         setError('An account with this email already exists. Please sign in.')
       } else if (code === 'auth/invalid-email') {
         setError('Please enter a valid email address.')
       } else if (code === 'auth/weak-password') {
         setError('Password is too weak. Use at least 6 characters.')
+      } else if (code === 'auth/operation-not-allowed') {
+        setError('Email/password sign-in is not enabled. Contact the organiser.')
+      } else if (code === 'auth/network-request-failed') {
+        setError('Network error. Check your connection and try again.')
+      } else if (message.toLowerCase().includes('permission') || code === 'permission-denied') {
+        setError('Permission denied. Your Firestore rules may not allow writing the profile.')
+      } else if (message) {
+        setError(message.length > 120 ? 'Registration failed. Please try again.' : message)
       } else {
         setError('Registration failed. Please try again.')
       }
