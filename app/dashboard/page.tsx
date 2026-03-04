@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { collection, query, where, getDocs } from 'firebase/firestore'
@@ -46,7 +46,7 @@ interface TeamDoc {
   size?: number
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, profile, loading, signOut } = useAuth()
@@ -487,5 +487,23 @@ export default function DashboardPage() {
 
       <Footer />
     </main>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-background">
+          <Navbar />
+          <div className="pt-32 pb-20 flex items-center justify-center">
+            <p className="text-foreground/60">Loading...</p>
+          </div>
+          <Footer />
+        </main>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   )
 }
