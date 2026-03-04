@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useWheelScroll } from '@/hooks/use-wheel-scroll'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import {
   Users,
@@ -36,6 +37,10 @@ export default function AdminDashboardPage() {
   const fetchWithAuth = useAdminFetch()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const revenueScrollRef = useRef<HTMLDivElement>(null)
+  const recentScrollRef = useRef<HTMLDivElement>(null)
+  useWheelScroll(revenueScrollRef, !!stats)
+  useWheelScroll(recentScrollRef, !!stats)
 
   useEffect(() => {
     fetchWithAuth('/api/admin/stats')
@@ -146,63 +151,77 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
-          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 flex flex-col min-h-0">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2 flex-shrink-0">
             <Calendar className="h-4 w-4 shrink-0" />
             Revenue by Event
           </h2>
-          <div className="scroll-area-touch mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
-            {Object.entries(stats.eventWise).length === 0 ? (
-              <p className="text-foreground/50 text-sm">No data yet</p>
-            ) : (
-              Object.entries(stats.eventWise).map(([eventId, data]) => (
-                <div
-                  key={eventId}
-                  className="flex justify-between text-sm py-1 border-b border-border/50 last:border-0"
-                >
-                  <span className="text-foreground/80 truncate max-w-[180px]">
-                    {stats.eventNames?.[eventId] ?? eventId}
-                  </span>
-                  <span className="text-accent font-medium">
-                    ₹{data.revenue.toLocaleString('en-IN')} ({data.count})
-                  </span>
-                </div>
-              ))
-            )}
+          <div className="mt-3 sm:mt-4 flex-1 min-h-0 max-h-48 sm:max-h-64 flex flex-col overflow-hidden">
+            <div
+              ref={revenueScrollRef}
+              className="scroll-area-touch flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-2"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              tabIndex={0}
+            >
+              {Object.entries(stats.eventWise).length === 0 ? (
+                <p className="text-foreground/50 text-sm">No data yet</p>
+              ) : (
+                Object.entries(stats.eventWise).map(([eventId, data]) => (
+                  <div
+                    key={eventId}
+                    className="flex justify-between text-sm py-1 border-b border-border/50 last:border-0"
+                  >
+                    <span className="text-foreground/80 truncate max-w-[180px]">
+                      {stats.eventNames?.[eventId] ?? eventId}
+                    </span>
+                    <span className="text-accent font-medium">
+                      ₹{data.revenue.toLocaleString('en-IN')} ({data.count})
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
-          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 flex flex-col min-h-0">
+          <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2 flex-shrink-0">
             <ListChecks className="h-4 w-4 shrink-0" />
             Recent Registrations
           </h2>
-          <div className="scroll-area-touch mt-3 sm:mt-4 space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
-            {stats.recentRegistrations.length === 0 ? (
-              <p className="text-foreground/50 text-sm">No registrations yet</p>
-            ) : (
-              stats.recentRegistrations.map((r) => (
-                <div
-                  key={r.id}
-                  className="flex justify-between items-center text-sm py-1 border-b border-border/50 last:border-0"
-                >
-                  <div>
-                    <p className="text-foreground/90 font-medium">
-                      {r.eventName || r.eventId || '—'}
-                    </p>
-                    <p className="text-foreground/50 text-xs">
-                      {r.status} · ₹{Number(r.amount || 0).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/admin/registrations?highlight=${r.id}`}
-                    className="text-accent text-xs hover:underline"
+          <div className="mt-3 sm:mt-4 flex-1 min-h-0 max-h-48 sm:max-h-64 flex flex-col overflow-hidden">
+            <div
+              ref={recentScrollRef}
+              className="scroll-area-touch flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-2"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              tabIndex={0}
+            >
+              {stats.recentRegistrations.length === 0 ? (
+                <p className="text-foreground/50 text-sm">No registrations yet</p>
+              ) : (
+                stats.recentRegistrations.map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex justify-between items-center text-sm py-1 border-b border-border/50 last:border-0"
                   >
-                    View
-                  </Link>
-                </div>
-              ))
-            )}
+                    <div>
+                      <p className="text-foreground/90 font-medium">
+                        {r.eventName || r.eventId || '—'}
+                      </p>
+                      <p className="text-foreground/50 text-xs">
+                        {r.status} · ₹{Number(r.amount || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/admin/registrations?highlight=${r.id}`}
+                      className="text-accent text-xs hover:underline"
+                    >
+                      View
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

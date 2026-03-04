@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useWheelScroll } from '@/hooks/use-wheel-scroll'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import { ListChecks, Search } from 'lucide-react'
 import type { EventRecord } from '@/lib/events-types'
@@ -32,6 +33,8 @@ export default function AdminRegistrationsPage() {
   const [eventFilter, setEventFilter] = useState(searchParams.get('eventId') || '')
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '')
   const [search, setSearch] = useState('')
+  const tableScrollRef = useRef<HTMLDivElement>(null)
+  useWheelScroll(tableScrollRef, !loading)
 
   useEffect(() => {
     fetchWithAuth('/api/admin/events')
@@ -123,8 +126,13 @@ export default function AdminRegistrationsPage() {
       {loading ? (
         <div className="py-12 text-center text-foreground/60">Loading...</div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0">
-          <div className="scroll-area-touch overflow-x-auto overflow-y-auto max-h-[70vh]">
+        <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0 flex flex-col max-h-[70vh] min-h-0">
+          <div
+            ref={tableScrollRef}
+            className="scroll-area-touch flex-1 min-h-0 overflow-x-auto overflow-y-auto"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            tabIndex={0}
+          >
             <table className="w-full text-sm min-w-[700px]">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b border-border bg-secondary/30">
