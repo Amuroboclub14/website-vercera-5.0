@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
+import { useMyRegistrations } from '@/hooks/use-my-registrations'
+import { ArrowLeft, AlertCircle, CheckCircle, BadgeCheck } from 'lucide-react'
 
 interface Props {
   params: Promise<{ bundleId: string }>
@@ -25,6 +26,7 @@ export default function BundleCheckoutPage({ params }: Props) {
   const router = useRouter()
   const { bundleId } = use(params)
   const { user, profile, loading } = useAuth()
+  const { purchasedBundleIds } = useMyRegistrations()
   const [bundle, setBundle] = useState<BundleInfo | null>(null)
   const [bundleLoading, setBundleLoading] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'failed'>('idle')
@@ -48,9 +50,11 @@ export default function BundleCheckoutPage({ params }: Props) {
       .finally(() => setBundleLoading(false))
   }, [bundleId])
 
+  const alreadyPurchased = !!(user && bundle && purchasedBundleIds.has(bundle.id))
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !profile || !bundle) return
+    if (!user || !profile || !bundle || alreadyPurchased) return
 
     const baseUrl = (process.env.NEXT_PUBLIC_EV_CHECKOUT_URL || 'https://www.continuumworks.app').replace(/\/$/, '')
     const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard?payment=success` : 'https://www.vercera.in/dashboard?payment=success'
@@ -157,6 +161,30 @@ export default function BundleCheckoutPage({ params }: Props) {
                     >
                       Try again
                     </button>
+                  </div>
+                ) : alreadyPurchased ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center">
+                      <BadgeCheck size={32} className="text-accent" />
+                    </div>
+                    <h2 className="font-display text-2xl font-bold text-foreground">You already own this pack</h2>
+                    <p className="text-foreground/70 text-center max-w-md">
+                      You have already purchased {bundle.name}. View your registrations in the dashboard.
+                    </p>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      <Link
+                        href="/dashboard"
+                        className="px-6 py-2.5 bg-accent text-accent-foreground rounded-full font-medium hover:bg-accent/90 transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/packs"
+                        className="px-6 py-2.5 bg-secondary text-foreground rounded-full font-medium hover:bg-secondary/80 transition-colors"
+                      >
+                        Back to packs
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={handlePayment} className="space-y-6">

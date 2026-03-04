@@ -7,7 +7,8 @@ import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useEvent } from '@/hooks/use-events'
-import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
+import { useMyRegistrations } from '@/hooks/use-my-registrations'
+import { ArrowLeft, AlertCircle, CheckCircle, BadgeCheck } from 'lucide-react'
 
 interface Props {
   params: Promise<{ eventId: string }>
@@ -18,6 +19,8 @@ export default function CheckoutPage({ params }: Props) {
   const { eventId } = use(params)
   const { event, loading: eventLoading } = useEvent(eventId)
   const { user, profile, loading } = useAuth()
+  const { registeredEventIds } = useMyRegistrations()
+  const alreadyRegistered = !!(user && event && registeredEventIds.has(event.id))
 
   const [isLoading, setIsLoading] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'failed'>('idle')
@@ -152,6 +155,30 @@ export default function CheckoutPage({ params }: Props) {
                     >
                       Try Again
                     </button>
+                  </div>
+                ) : alreadyRegistered ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center">
+                      <BadgeCheck size={32} className="text-accent" />
+                    </div>
+                    <h2 className="font-display text-2xl font-bold text-foreground">Already registered</h2>
+                    <p className="text-foreground/70 text-center max-w-md">
+                      You have already registered for {event.name}. View your registration or go to the event page.
+                    </p>
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="px-6 py-2.5 bg-accent text-accent-foreground rounded-full font-medium hover:bg-accent/90 transition-colors"
+                      >
+                        View event
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="px-6 py-2.5 bg-secondary text-foreground rounded-full font-medium hover:bg-secondary/80 transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={handlePayment} className="space-y-6">
