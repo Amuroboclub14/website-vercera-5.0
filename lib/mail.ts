@@ -16,11 +16,18 @@ function getTransporter() {
   })
 }
 
+export interface MailAttachment {
+  filename: string
+  content: Buffer
+  cid?: string
+}
+
 export interface SendMailOptions {
   to: string
   subject: string
   html: string
   text?: string
+  attachments?: MailAttachment[]
 }
 
 /** Send an email. No-op (and returns false) if SMTP is not configured. */
@@ -33,13 +40,19 @@ export async function sendMail(options: SendMailOptions): Promise<boolean> {
     return false
   }
   try {
-    await transporter.sendMail({
+    const mailOptions: Parameters<typeof transporter.sendMail>[0] = {
       from: FROM,
       to: options.to,
       subject: options.subject,
       html: options.html,
       text: options.text,
-    })
+    }
+    if (options.attachments?.length) {
+      mailOptions.attachments = options.attachments.map((a) =>
+        a.cid ? { filename: a.filename, content: a.content, cid: a.cid } : { filename: a.filename, content: a.content }
+      )
+    }
+    await transporter.sendMail(mailOptions)
     return true
   } catch (err) {
     console.error('[mail] Send failed:', err)

@@ -76,18 +76,22 @@ export async function POST(request: NextRequest) {
       verceraIdGeneratedAt: new Date().toISOString(),
     })
 
-    // Send registration email with Vercera ID and QR code
+    // Send registration email with Vercera ID and QR code (inline + PNG attachment)
     const email = (userData?.email as string)?.trim()
     const fullName = (userData?.fullName as string)?.trim() || 'Participant'
     if (email) {
       try {
-        const qrDataUrl = await QRCode.toDataURL(verceraId, { width: 256, margin: 1 })
-        const html = registrationEmailHtml({ fullName, verceraId, qrDataUrl })
+        const qrBuffer = await QRCode.toBuffer(verceraId, { type: 'png', width: 280, margin: 2 })
+        const html = registrationEmailHtml({ fullName, verceraId })
         await sendMail({
           to: email,
           subject: 'Your Vercera 5.0 Registration — Vercera ID & QR Code',
           html,
-          text: `Welcome to Vercera 5.0. Your Vercera ID: ${verceraId}. Present this ID (or its QR code from your dashboard) at the venue for check-in.`,
+          text: `Welcome to Vercera 5.0. Your Vercera ID: ${verceraId}. Present this ID (or the attached QR code) at the venue for check-in.`,
+          attachments: [
+            { filename: 'qrcode.png', content: qrBuffer, cid: 'vercera-qr' },
+            { filename: 'Vercera-QR-Code.png', content: qrBuffer },
+          ],
         })
       } catch (e) {
         console.error('Generate Vercera ID: send registration email failed', e)

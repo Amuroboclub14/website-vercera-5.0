@@ -8,7 +8,7 @@ import { registrationEmailHtml } from '@/lib/email-templates'
 /**
  * POST /api/mail/send-registration-email
  * Sends the registration confirmation email (Vercera ID + QR code) to the authenticated user.
- * Call after signup or when a legacy user gets a Vercera ID.
+ * QR is embedded inline (cid) and attached as PNG. Call after signup or when a legacy user gets a Vercera ID.
  */
 export async function POST(request: NextRequest) {
   const userId = await getAuthenticatedUserId(request)
@@ -33,14 +33,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No Vercera ID on profile' }, { status: 400 })
     }
 
-    const qrDataUrl = await QRCode.toDataURL(verceraId, { width: 256, margin: 1 })
-    const html = registrationEmailHtml({ fullName, verceraId, qrDataUrl })
+    const qrBuffer = await QRCode.toBuffer(verceraId, { type: 'png', width: 280, margin: 2 })
+    const html = registrationEmailHtml({ fullName, verceraId })
 
     const sent = await sendMail({
       to: email,
       subject: 'Your Vercera 5.0 Registration — Vercera ID & QR Code',
       html,
-      text: `Welcome to Vercera 5.0. Your Vercera ID: ${verceraId}. Present this ID (or its QR code from your dashboard) at the venue for check-in.`,
+      text: `Welcome to Vercera 5.0. Your Vercera ID: ${verceraId}. Present this ID (or the attached QR code) at the venue for check-in.`,
+      attachments: [
+        { filename: 'qrcode.png', content: qrBuffer, cid: 'vercera-qr' },
+        { filename: 'Vercera-QR-Code.png', content: qrBuffer },
+      ],
     })
 
     if (!sent) {
