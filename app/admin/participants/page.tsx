@@ -35,6 +35,7 @@ export default function AdminParticipantsPage() {
   }, [fetchWithAuth])
 
   const filtered = participants.filter((p) => {
+    if (accommodationFilter === 'yes' && !p.hasAccommodation) return false
     if (!search) return true
     const q = search.toLowerCase()
     return (
@@ -57,15 +58,25 @@ export default function AdminParticipantsPage() {
         </p>
       </div>
 
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
-        <input
-          type="text"
-          placeholder="Search name, email, Vercera ID, college..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-full border border-border bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-accent touch-manipulation"
-        />
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+        <div className="relative flex-1 w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/50" />
+          <input
+            type="text"
+            placeholder="Search name, email, Vercera ID, college..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-full border border-border bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-accent touch-manipulation"
+          />
+        </div>
+        <select
+          value={accommodationFilter}
+          onChange={(e) => setAccommodationFilter(e.target.value as 'all' | 'yes')}
+          className="min-w-[160px] px-4 py-2.5 rounded-full border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent touch-manipulation"
+        >
+          <option value="all">All participants</option>
+          <option value="yes">Has accommodation</option>
+        </select>
       </div>
 
       {loading ? (
@@ -81,12 +92,13 @@ export default function AdminParticipantsPage() {
                   <th className="text-left py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Email</th>
                   <th className="text-left py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm hidden md:table-cell">College</th>
                   <th className="text-left py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm hidden md:table-cell">Course / Dept</th>
+                  <th className="text-left py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Accommodation</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-foreground/50">
+                    <td colSpan={6} className="py-8 text-center text-foreground/50">
                       No participants found.
                     </td>
                   </tr>
@@ -110,6 +122,15 @@ export default function AdminParticipantsPage() {
                       </td>
                       <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-foreground/60 text-xs hidden md:table-cell">
                         {[p.courseOfStudy, p.department].filter(Boolean).join(' · ') || '—'}
+                      </td>
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4">
+                        {p.hasAccommodation ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-medium">
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="text-foreground/50 text-xs">—</span>
+                        )}
                       </td>
                     </tr>
                   ))
