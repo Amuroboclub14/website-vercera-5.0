@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
         originalPrice: d.originalPrice != null ? Number(d.originalPrice) : undefined,
         eventIds: Array.isArray(d.eventIds) ? d.eventIds : [],
         description: d.description ?? undefined,
+        perks: Array.isArray(d.perks) ? d.perks : [],
+        highlight: Boolean(d.highlight),
         order: d.order != null ? Number(d.order) : undefined,
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth
   try {
     const body = await request.json()
-    const { name, type, price, originalPrice, eventIds, description, order } = body
+    const { name, type, price, originalPrice, eventIds, description, order, perks, highlight } = body
     if (!name || !type) {
       return NextResponse.json({ error: 'name and type are required' }, { status: 400 })
     }
@@ -62,8 +64,16 @@ export async function POST(request: NextRequest) {
     if (originalPrice != null) data.originalPrice = Number(originalPrice)
     if (Array.isArray(eventIds)) data.eventIds = eventIds
     if (description != null) data.description = String(description)
+    if (Array.isArray(perks)) data.perks = perks
+    if (highlight === true) data.highlight = true
 
     const db = getVerceraFirestore()
+    if (highlight === true) {
+      const existing = await db.collection('bundles').get()
+      const batch = db.batch()
+      existing.docs.forEach((doc) => { batch.update(doc.ref, { highlight: false, updatedAt: now }) })
+      await batch.commit()
+    }
     const ref = await db.collection('bundles').add(data)
     return NextResponse.json({ id: ref.id, ...data })
   } catch (err) {

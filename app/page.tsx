@@ -11,10 +11,8 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
-      {/* Content + overlay: overlay only covers this block, not the footer */}
       <div className="relative">
         <AnimatedHeroBackground />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/60 via-background/25 to-background/60 pointer-events-none" aria-hidden />
         <Hero />
         <PacksSection />
         <EventsSection />

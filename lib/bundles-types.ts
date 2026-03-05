@@ -18,6 +18,10 @@ export interface BundleRecord {
   /** For non_technical bundle: event IDs included. For other types may be empty (resolved from events). */
   eventIds: string[]
   description?: string
+  /** Display perks with checkmarks on pack cards. */
+  perks?: string[]
+  /** If true, this bundle is shown as the highlighted/extruded tier (only one should be set). */
+  highlight?: boolean
   order?: number
   createdAt?: string
   updatedAt?: string

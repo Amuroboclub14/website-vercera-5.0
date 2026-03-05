@@ -11,6 +11,8 @@ export interface PublicBundle {
   price: number
   originalPrice?: number
   description?: string
+  perks?: string[]
+  highlight?: boolean
 }
 
 /** GET: Public list of all bundles for display on Packs page. */
@@ -27,6 +29,8 @@ export async function GET() {
         price: Number(d.price) ?? 0,
         originalPrice: d.originalPrice != null ? Number(d.originalPrice) : undefined,
         description: d.description ?? undefined,
+        perks: Array.isArray(d.perks) ? d.perks : undefined,
+        highlight: Boolean(d.highlight),
         order: d.order != null ? Number(d.order) : 999,
       }
     })
