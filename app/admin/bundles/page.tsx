@@ -30,8 +30,11 @@ export default function AdminBundlesPage() {
     originalPrice: undefined,
     eventIds: [],
     description: '',
+    perks: [],
+    highlight: false,
     order: 0,
   })
+  const [newPerk, setNewPerk] = useState('')
 
   const loadBundles = useCallback(() => {
     setLoading(true)
@@ -79,8 +82,11 @@ export default function AdminBundlesPage() {
       originalPrice: undefined,
       eventIds: [],
       description: '',
+      perks: [],
+      highlight: false,
       order: bundles.length,
     })
+    setNewPerk('')
     setModalOpen(true)
   }
 
@@ -99,8 +105,11 @@ export default function AdminBundlesPage() {
       originalPrice: data.originalPrice,
       eventIds: data.eventIds ?? [],
       description: data.description ?? '',
+      perks: data.perks ?? [],
+      highlight: Boolean(data.highlight),
       order: data.order ?? 0,
     })
+    setNewPerk('')
     setModalOpen(true)
   }
 
@@ -123,6 +132,8 @@ export default function AdminBundlesPage() {
       originalPrice: form.originalPrice != null ? Number(form.originalPrice) : undefined,
       eventIds: form.eventIds ?? [],
       description: form.description ?? '',
+      perks: form.perks ?? [],
+      highlight: Boolean(form.highlight),
       order: form.order ?? 0,
     }
     try {
@@ -331,6 +342,69 @@ export default function AdminBundlesPage() {
                   rows={2}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground/80 mb-1">Perks (shown with checkmarks on pack cards)</label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={newPerk}
+                    onChange={(e) => setNewPerk(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const t = newPerk.trim()
+                        if (t) {
+                          updateForm('perks', [...(form.perks ?? []), t])
+                          setNewPerk('')
+                        }
+                      }
+                    }}
+                    placeholder="e.g. Access to all technical events"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = newPerk.trim()
+                      if (t) {
+                        updateForm('perks', [...(form.perks ?? []), t])
+                        setNewPerk('')
+                      }
+                    }}
+                    className="px-3 py-2 rounded-lg border border-border text-foreground hover:bg-secondary text-sm"
+                  >
+                    Add
+                  </button>
+                </div>
+                <ul className="space-y-1 max-h-32 overflow-y-auto border border-border rounded-lg p-2">
+                  {(form.perks ?? []).map((p, idx) => (
+                    <li key={idx} className="flex items-center justify-between gap-2 text-sm text-foreground">
+                      <span>{p}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateForm('perks', (form.perks ?? []).filter((_, i) => i !== idx))}
+                        className="text-destructive hover:bg-destructive/10 rounded px-1.5 py-0.5"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                  {(form.perks ?? []).length === 0 && (
+                    <li className="text-foreground/50 text-sm">No perks yet. Add lines to show with checkmarks.</li>
+                  )}
+                </ul>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground/80 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.highlight)}
+                    onChange={(e) => updateForm('highlight', e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  Highlight this bundle (extruded / featured tier — only one bundle can be highlighted)
+                </label>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={closeModal} className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-secondary">

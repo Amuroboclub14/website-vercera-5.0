@@ -27,6 +27,8 @@ export async function GET(
       originalPrice: d.originalPrice != null ? Number(d.originalPrice) : undefined,
       eventIds: Array.isArray(d.eventIds) ? d.eventIds : [],
       description: d.description ?? undefined,
+      perks: Array.isArray(d.perks) ? d.perks : [],
+      highlight: Boolean(d.highlight),
       order: d.order != null ? Number(d.order) : undefined,
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,
@@ -49,13 +51,21 @@ export async function PUT(
     const { id } = await params
     if (!id) return NextResponse.json({ error: 'Bundle ID required' }, { status: 400 })
     const body = await request.json()
-    const { name, type, price, originalPrice, eventIds, description, order } = body
+    const { name, type, price, originalPrice, eventIds, description, order, perks, highlight } = body
     const db = getVerceraFirestore()
     const ref = db.collection('bundles').doc(id)
     if (!(await ref.get()).exists) {
       return NextResponse.json({ error: 'Bundle not found' }, { status: 404 })
     }
     const now = new Date().toISOString()
+    if (highlight === true) {
+      const existing = await db.collection('bundles').get()
+      const batch = db.batch()
+      existing.docs.forEach((doc) => {
+        if (doc.id !== id) batch.update(doc.ref, { highlight: false, updatedAt: now })
+      })
+      await batch.commit()
+    }
     const data: Record<string, unknown> = { updatedAt: now }
     if (name !== undefined) data.name = String(name)
     if (type !== undefined) data.type = type
@@ -64,6 +74,8 @@ export async function PUT(
     if (eventIds !== undefined) data.eventIds = Array.isArray(eventIds) ? eventIds : []
     if (description !== undefined) data.description = String(description)
     if (order !== undefined) data.order = Number(order) ?? 0
+    if (perks !== undefined) data.perks = Array.isArray(perks) ? perks : []
+    if (highlight !== undefined) data.highlight = Boolean(highlight)
 
     await ref.update(data)
     return NextResponse.json({ success: true })
