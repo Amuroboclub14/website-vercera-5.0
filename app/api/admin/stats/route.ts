@@ -11,26 +11,30 @@ export async function GET(request: NextRequest) {
   try {
     const db = getVerceraFirestore()
 
-    const [regsSnap, participantsSnap, teamsSnap] = await Promise.all([
+    const [regsSnap, participantsSnap, teamsSnap, txSnap] = await Promise.all([
       db.collection('registrations').get(),
       db.collection('vercera_5_participants').get(),
       db.collection('teams').get(),
+      db.collection('transactions').get(),
     ])
 
     const registrations = regsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<{
       id: string
-      amount?: number
       status?: string
       eventId?: string
-      eventName?: string
       attended?: boolean
       createdAt?: string
     }>
 
-    const totalRevenueRaw = registrations
-      .filter((r) => r.status === 'paid' || r.status === 'completed')
-      .reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
-    const totalRevenue = Math.round(totalRevenueRaw * 100) / 100
+    const transactions = txSnap.docs.map((d) => d.data()) as Array<{
+      type?: string
+      amount?: number
+      eventId?: string
+    }>
+
+    const totalRevenue = Math.round(
+      transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) * 100
+    ) / 100
 
     const totalRegistrations = registrations.length
     const paidCount = registrations.filter((r) => r.status === 'paid' || r.status === 'completed').length
@@ -41,10 +45,13 @@ export async function GET(request: NextRequest) {
       const eid = r.eventId || 'unknown'
       if (!eventWise[eid]) eventWise[eid] = { count: 0, revenue: 0, attended: 0 }
       eventWise[eid].count += 1
-      if (r.status === 'paid' || r.status === 'completed') {
-        eventWise[eid].revenue += Number(r.amount) || 0
-      }
       if (r.attended) eventWise[eid].attended += 1
+    }
+    for (const t of transactions) {
+      if (t.type === 'event' && t.eventId) {
+        if (!eventWise[t.eventId]) eventWise[t.eventId] = { count: 0, revenue: 0, attended: 0 }
+        eventWise[t.eventId].revenue += Number(t.amount) || 0
+      }
     }
 
     const recentRegistrations = registrations
