@@ -59,7 +59,81 @@ function DashboardContent() {
   const [showPaymentHint, setShowPaymentHint] = useState(false)
   const [eligibleEvents, setEligibleEvents] = useState<Array<{ eventId: string; eventName: string; bundleId: string; bundleName: string | null }>>([])
   const [addingEventId, setAddingEventId] = useState<string | null>(null)
-  const { totalSpent } = useMyRegistrations()
+  const { totalSpent, loading: summaryLoading } = useMyRegistrations()
+
+  useEffect(() => {
+    if (!user) return
+    const fetchEligible = async () => {
+      try {
+        const token = await user.getIdToken()
+        const res = await fetch('/api/me/eligible-events', { headers: { Authorization: `Bearer ${token}` } })
+        if (res.ok) {
+          const data = await res.json()
+          setEligibleEvents(data.eligible ?? [])
+        }
+      } catch {
+        setEligibleEvents([])
+      }
+    }
+    fetchEligible()
+  }, [user])
+
+  const refreshRegistrationsAndEligible = async () => {
+    if (!user) return
+    const regsRef = collection(db, 'registrations')
+    const q = query(regsRef, where('userId', '==', user.uid))
+    const snapshot = await getDocs(q)
+    const regs: Registration[] = snapshot.docs.map((doc) => {
+      const d = doc.data()
+      return {
+        id: doc.id,
+        eventId: d.eventId,
+        eventName: d.eventName || 'Event',
+        registrationDate: d.registrationDate || '',
+        status: d.status || 'registered',
+        amount: d.amount || 0,
+        attended: d.attended || false,
+        isTeamEvent: d.isTeamEvent || false,
+        teamId: d.teamId,
+        bundleId: d.bundleId,
+        bundleName: d.bundleName ?? null,
+        hasAccommodation: d.hasAccommodation || false,
+      }
+    })
+    setRegistrations(regs)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/me/eligible-events', { headers: { Authorization: `Bearer ${token}` } })
+      if (res.ok) {
+        const data = await res.json()
+        setEligibleEvents(data.eligible ?? [])
+      }
+    } catch {
+      setEligibleEvents([])
+    }
+  }
+
+  const handleAddFromPack = async (eventId: string) => {
+    if (!user || addingEventId) return
+    setAddingEventId(eventId)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/registration/add-from-pack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId }),
+      })
+      if (res.ok) await refreshRegistrationsAndEligible()
+      else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to add event')
+      }
+    } catch {
+      alert('Request failed')
+    } finally {
+      setAddingEventId(null)
+    }
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -346,13 +420,40 @@ function DashboardContent() {
                 <div className="bg-card border border-border rounded-xl p-6">
                   <p className="text-foreground/60 text-sm mb-2">Total Spent</p>
                   <p className="font-display text-3xl font-bold text-accent">
-                    ₹{regsLoading ? '...' : (() => {
-                      const total = registrations.reduce((sum, r) => sum + (Number(r.amount) ?? 0), 0)
-                      return (Math.round(total * 100) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    })()}
+                    ₹{summaryLoading ? '...' : totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
+
+              {eligibleEvents.length > 0 && (
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                  <div className="p-6 border-b border-border">
+                    <h2 className="font-display text-2xl font-bold text-foreground">Add events from your packs</h2>
+                    <p className="text-foreground/60 text-sm mt-1">You bought a pack — add these events to your profile to be counted as registered</p>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {eligibleEvents.map((e) => (
+                      <div key={e.eventId} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-foreground">{e.eventName}</p>
+                          <p className="text-foreground/50 text-xs">{e.bundleName || 'Pack'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/events/${e.eventId}`} className="px-3 py-1.5 text-sm rounded-full border border-border bg-secondary text-foreground hover:bg-secondary/80">View</Link>
+                          <button
+                            type="button"
+                            disabled={addingEventId === e.eventId}
+                            onClick={() => handleAddFromPack(e.eventId)}
+                            className="px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium hover:bg-accent/90 disabled:opacity-50"
+                          >
+                            {addingEventId === e.eventId ? 'Adding…' : 'Add to my events'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="p-6 border-b border-border">
@@ -394,7 +495,9 @@ function DashboardContent() {
                           <div className="flex items-center gap-4">
                             <div className="text-right">
                               <p className="text-foreground/60 text-sm">Amount Paid</p>
-                              <p className="font-bold text-accent text-lg">₹{reg.amount}</p>
+                              <p className="font-bold text-accent text-lg">
+                                {(reg.bundleId && Number(reg.amount) === 0) ? 'Included in pack' : `₹${Number(reg.amount).toLocaleString('en-IN')}`}
+                              </p>
                             </div>
                             <div className="text-accent">{reg.status === 'paid' ? <CheckCircle size={20} /> : <Clock size={20} />}</div>
                           </div>
