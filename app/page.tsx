@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/animated-navbar'
 import { Hero } from '@/components/hero'
+import { PacksSection } from '@/components/packs-section'
 import { EventsSection } from '@/components/animated-events-section'
 import { GallerySection } from '@/components/gallery-section'
 import { FAQSection } from '@/components/animated-faq-section'
@@ -15,6 +16,7 @@ export default function Page() {
         <AnimatedHeroBackground />
         <div className="absolute inset-0 z-[1] bg-gradient-to-b from-background/60 via-background/25 to-background/60 pointer-events-none" aria-hidden />
         <Hero />
+        <PacksSection />
         <EventsSection />
         <GallerySection />
         <FAQSection />

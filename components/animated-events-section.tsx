@@ -77,7 +77,7 @@ export function EventsSection() {
             Choose from a diverse range of technical and non-technical events designed to challenge and inspire.
           </p>
           <p className="mt-4">
-            <Link href="/packs" className="text-accent hover:text-accent/80 font-medium inline-flex items-center gap-1">
+            <Link href="/events" className="text-accent hover:text-accent/80 font-medium inline-flex items-center gap-1">
               Save more with packs & bundles <ArrowRight size={16} className="inline" />
             </Link>
           </p>
