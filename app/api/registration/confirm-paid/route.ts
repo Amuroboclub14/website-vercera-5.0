@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { generateVerceraTeamId } from '@/lib/vercera-team-id'
-import { resolveBundleToEvents } from '@/lib/resolve-bundle'
-import { splitAmountExactly } from '@/lib/bundle-amount-split'
 import { sendPaymentReceipt } from '@/lib/mail'
 
 function getVerceraFirestore() {
@@ -94,9 +92,10 @@ export async function POST(request: NextRequest) {
 
     const db = getVerceraFirestore()
 
-    // Idempotency: if this order was already processed, return success without creating duplicates
-    const existingByOrder = await db.collection('registrations').where('razorpayOrderId', '==', orderId).limit(1).get()
-    if (!existingByOrder.empty) {
+    // Idempotency: if this order was already processed (registrations or transactions), return success
+    const existingReg = await db.collection('registrations').where('razorpayOrderId', '==', orderId).limit(1).get()
+    const existingTx = await db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1).get()
+    if (!existingReg.empty || !existingTx.empty) {
       return NextResponse.json({ success: true, message: 'Payment already processed' })
     }
 
@@ -115,13 +114,14 @@ export async function POST(request: NextRequest) {
 
     if (bundleId) {
       const alreadyBought = await db
-        .collection('registrations')
+        .collection('transactions')
         .where('userId', '==', userId)
+        .where('type', '==', 'pack')
         .where('bundleId', '==', bundleId)
         .limit(1)
         .get()
       if (!alreadyBought.empty) {
-        return NextResponse.json({ success: true, message: 'Bundle already registered for this user' })
+        return NextResponse.json({ success: true, message: 'Pack already purchased' })
       }
 
       const bundleSnap = await db.collection('bundles').doc(bundleId).get()
@@ -129,44 +129,20 @@ export async function POST(request: NextRequest) {
       const bundleType = bundleData?.type ?? 'all_events'
       const bundleName = bundleData?.name ?? null
       const hasAccommodation = bundleType === 'all_in_one'
-
-      const events = await resolveBundleToEvents(bundleId)
-      if (events.length === 0) {
-        return NextResponse.json({ error: 'Bundle has no events or not found.' }, { status: 400 })
-      }
       const totalAmount = Number(amount)
-      const amounts = splitAmountExactly(totalAmount, events.length)
-      const registrationsRef = db.collection('registrations')
-      for (let i = 0; i < events.length; i++) {
-        const { eventId: eid, eventName: ename } = events[i]
-        const existing = await registrationsRef
-          .where('userId', '==', userId)
-          .where('eventId', '==', eid)
-          .limit(1)
-          .get()
-        if (!existing.empty) continue
-        const eventSnap = await db.collection('events').doc(eid).get()
-        const isTeamEvent = Boolean(eventSnap.exists && (eventSnap.data()?.isTeamEvent === true))
-        await db.collection('registrations').add({
-          userId,
-          verceraId: leaderVerceraId,
-          eventId: eid,
-          eventName: ename,
-          amount: amounts[i],
-          registrationDate,
-          status: 'paid',
-          attended: false,
-          razorpayOrderId: orderId,
-          razorpayPaymentId: paymentId,
-          bundleId,
-          bundleType,
-          bundleName,
-          hasAccommodation,
-          isTeamEvent,
-          additionalInfo: additionalInfo || null,
-          createdAt: nowIso,
-        })
-      }
+
+      await db.collection('transactions').add({
+        userId,
+        type: 'pack',
+        bundleId,
+        bundleName: bundleName ?? null,
+        amount: totalAmount,
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        hasAccommodation,
+        createdAt: nowIso,
+      })
+
       const userSnap = await db.collection('vercera_5_participants').doc(userId).get()
       const profileData = userSnap.exists ? (userSnap.data() as { email?: string; fullName?: string }) : null
       if (profileData?.email) {
@@ -176,11 +152,11 @@ export async function POST(request: NextRequest) {
           fullName: profileData.fullName || 'Participant',
           orderId,
           date: receiptDate,
-          items: events.map((e, i) => ({ name: e.eventName, amount: amounts[i] })),
-          totalAmount: Number(amount),
+          items: [{ name: bundleName ?? 'Pack', amount: totalAmount }],
+          totalAmount,
         }).catch((e) => console.error('[confirm-paid] Receipt email failed', e))
       }
-      return NextResponse.json({ success: true, message: 'Payment verified and bundle registrations saved' })
+      return NextResponse.json({ success: true, message: 'Pack purchase recorded. Add events from the Events page or Dashboard.' })
     }
 
     const isTeamEvent = Boolean(team && team.isTeamEvent && team.members && team.members.length > 0)
@@ -240,6 +216,17 @@ export async function POST(request: NextRequest) {
 
       const teamDocId = teamDoc.id
       const perMemberAmount = teamSize > 0 ? Number(amount) / teamSize : Number(amount)
+      const teamAmount = Number(amount)
+      await db.collection('transactions').add({
+        userId,
+        type: 'event',
+        eventId,
+        eventName: eventName ?? null,
+        amount: teamAmount,
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        createdAt: nowIso,
+      })
       const batch = db.batch()
       for (const member of team.members) {
         const regRef = db.collection('registrations').doc()
@@ -264,12 +251,23 @@ export async function POST(request: NextRequest) {
       }
       await batch.commit()
     } else {
+      const amt = Number(amount)
+      await db.collection('transactions').add({
+        userId,
+        type: 'event',
+        eventId,
+        eventName: eventName ?? null,
+        amount: amt,
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        createdAt: nowIso,
+      })
       await db.collection('registrations').add({
         userId,
         verceraId: leaderVerceraId,
         eventId,
         eventName,
-        amount: Number(amount),
+        amount: amt,
         registrationDate,
         status: 'paid',
         attended: false,
