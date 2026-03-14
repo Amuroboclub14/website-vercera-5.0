@@ -113,7 +113,6 @@ export function PackTierCard({ bundle, purchased, href, onSelect }: PackTierCard
               View pack & events →
             </button>
           ) : null}
-          <p className="text-foreground/50 text-xs text-center">No credit card required</p>
         </div>
       </div>
     </div>

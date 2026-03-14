@@ -158,7 +158,7 @@ export default function EventsPage() {
             <p className="text-foreground/70 text-lg">Explore our complete catalog of technical and non-technical events at Vercera 5.0</p>
           </motion.div>
 
-          {/* Packs - tier row */}
+          {/* Packs - responsive grid, highlighted first */}
           {bundles.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -166,16 +166,16 @@ export default function EventsPage() {
               transition={{ duration: 0.5, delay: 0.15 }}
               className="mb-12"
             >
-              <h2 className="font-display text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Package className="h-7 w-7 text-accent" />
-                Packs &amp; Bundles
-              </h2>
-              <div
-                className="grid gap-4 items-stretch w-full"
-                style={{ gridTemplateColumns: `repeat(${packCols}, minmax(0, 1fr))` }}
-              >
+              <div className="mb-4">
+                <h2 className="font-display text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Package className="h-7 w-7 text-accent" />
+                  Packs &amp; Bundles
+                </h2>
+                <p className="text-foreground/60 text-sm mt-1">Buy a pack to get multiple events at a discount. After payment, add the events you want to your profile.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
                 {packsOrdered.map((b) => (
-                  <div key={b.id} className="min-w-0 flex">
+                  <div key={b.id} className="flex min-w-0">
                     <PackTierCard
                       bundle={b}
                       purchased={purchasedBundleIds.has(b.id)}
@@ -187,6 +187,21 @@ export default function EventsPage() {
             </motion.div>
           )}
 
+          {/* How it works — clear guidance */}
+          <div className="mb-8 rounded-xl border border-border bg-card/80 px-4 py-4 sm:px-6 sm:py-5">
+            <h3 className="font-semibold text-foreground text-sm sm:text-base mb-2">How to register</h3>
+            <ul className="text-sm text-foreground/85 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="text-accent font-bold">1.</span>
+                <span><strong className="text-foreground">Buy a pack</strong> (above) — Get multiple events at a discount. After payment, add the events you want to your profile from this page or your dashboard.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-accent font-bold">2.</span>
+                <span><strong className="text-foreground">Or register for one event</strong> — Click &quot;Register for this event&quot; on any event below to pay and register for that event only.</span>
+              </li>
+            </ul>
+          </div>
+
           {/* Pack purchase instructions — show when user has purchased a bundle */}
           {user && purchasedBundleIds.size > 0 && (
             <motion.div
@@ -197,14 +212,14 @@ export default function EventsPage() {
               <div className="flex items-start gap-2 flex-1">
                 <Info className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-foreground/90">
-                  You&apos;ve purchased a pack. <strong className="text-foreground">Add events to your profile</strong> by clicking <strong className="text-accent">&quot;Add to my events&quot;</strong> on any event included in your pack. You can do this from here or from your dashboard later.
+                  You have a pack. <strong className="text-foreground">Add events to your profile</strong> by clicking <strong className="text-accent">&quot;Add to my events&quot;</strong> on any event that&apos;s included — below or on your dashboard.
                 </p>
               </div>
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-accent hover:text-accent/80 whitespace-nowrap"
               >
-                Go to Dashboard →
+                Dashboard →
               </Link>
             </motion.div>
           )}
@@ -335,24 +350,13 @@ export default function EventsPage() {
                             {addingEventId === event.id ? 'Adding…' : 'Add to my events'}
                           </button>
                         ) : (
-                          <>
-                            <Link
-                              href={`/checkout/${event.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-semibold text-sm hover:bg-accent/90 inline-flex items-center justify-center"
-                            >
-                              Register
-                            </Link>
-                            {bundles.some((b) => !purchasedBundleIds.has(b.id)) && (
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); const b = bundles.find((x) => !purchasedBundleIds.has(x.id)); if (b) setPackModal(b) }}
-                                className="px-4 py-2 border border-accent/50 text-accent rounded-lg font-semibold text-sm hover:bg-accent/10"
-                              >
-                                Save with pack
-                              </button>
-                            )}
-                          </>
+                          <Link
+                            href={`/checkout/${event.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-4 py-2 bg-accent text-accent-foreground rounded-lg font-semibold text-sm hover:bg-accent/90 inline-flex items-center justify-center"
+                          >
+                            Register for this event
+                          </Link>
                         )}
                       </div>
                     </div>

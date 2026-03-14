@@ -78,7 +78,7 @@ export function EventsSection() {
           </p>
           <p className="mt-4">
             <Link href="/events" className="text-accent hover:text-accent/80 font-medium inline-flex items-center gap-1">
-              Save more with packs & bundles <ArrowRight size={16} className="inline" />
+              View all events & packs <ArrowRight size={16} className="inline" />
             </Link>
           </p>
         </motion.div>
