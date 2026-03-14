@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useEvents } from '@/hooks/use-events'
 import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { EventsComingSoon } from '@/components/events-coming-soon'
-import { ArrowRight, Users, Trophy, BadgeCheck } from 'lucide-react'
+import { FlagshipEventCard } from '@/components/flagship-event-card'
+import { ArrowRight, Users, BadgeCheck } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
 const containerVariants = {
@@ -32,8 +33,9 @@ const itemVariants = {
 export function EventsSection() {
   const { events, loading, error, showComingSoon } = useEvents()
   const { registeredEventIds } = useMyRegistrations()
-  const technical = events.filter((e) => e.category === 'technical')
-  const nonTechnical = events.filter((e) => e.category === 'non-technical')
+  const flagship = [...events.filter((e) => e.flagship)].sort((a, b) => (b.prizePool ?? 0) - (a.prizePool ?? 0))
+  const technical = events.filter((e) => e.category === 'technical' && !e.flagship)
+  const nonTechnical = events.filter((e) => e.category === 'non-technical' && !e.flagship)
 
   if (loading) {
     return (
@@ -82,6 +84,31 @@ export function EventsSection() {
             </Link>
           </p>
         </motion.div>
+
+        {/* Flagship Events — sorted by prize pool, distinct UI */}
+        {flagship.length > 0 && (
+          <div className="mb-16 space-y-6 [&>*]:pointer-events-auto">
+            <motion.h3
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-2xl font-bold text-accent mb-6 flex items-center gap-2"
+            >
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/20">Flagship Events</span>
+            </motion.h3>
+            {flagship.map((event) => (
+              <FlagshipEventCard
+                key={event.id}
+                event={event}
+                isRegistered={registeredEventIds.has(event.id)}
+                isEligibleFromPack={false}
+                addingEventId={null}
+                onAddFromPack={() => {}}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Technical Events */}
         <div className="mb-16">
@@ -225,22 +252,16 @@ function EventCard({ event, isRegistered }: EventCardProps) {
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            {/* Stats — prize pool main highlight */}
+            <div className="pt-2 space-y-2">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-secondary rounded-lg p-3"
+                whileHover={{ scale: 1.02 }}
+                className="bg-accent/10 border border-accent/30 rounded-lg p-3"
               >
-                <p className="text-xs text-foreground/60 mb-1">Prize Pool</p>
-                <p className="font-bold text-accent">{formatPrizeAmount(event.prizePool)}</p>
+                <p className="text-xs text-accent font-semibold uppercase tracking-wide mb-0.5">Prize Pool</p>
+                <p className="font-bold text-accent text-lg">{formatPrizeAmount(event.prizePool)}</p>
               </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="bg-secondary rounded-lg p-3"
-              >
-                <p className="text-xs text-foreground/60 mb-1">Fee</p>
-                <p className="font-bold text-accent">₹{event.registrationFee}</p>
-              </motion.div>
+              <p className="text-foreground/50 text-xs">Fee ₹{event.registrationFee?.toLocaleString('en-IN')}</p>
             </div>
 
             {/* Registration Bar */}

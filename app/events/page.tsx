@@ -101,7 +101,10 @@ export default function EventsPage() {
     return [...list.filter((e) => e.flagship), ...list.filter((e) => !e.flagship)]
   }, [events, selectedCategory])
 
-  const flagshipEvents = filteredEvents.filter((e) => e.flagship)
+  const flagshipEvents = useMemo(
+    () => [...filteredEvents.filter((e) => e.flagship)].sort((a, b) => (b.prizePool ?? 0) - (a.prizePool ?? 0)),
+    [filteredEvents]
+  )
   const otherEvents = filteredEvents.filter((e) => !e.flagship)
 
   const packsOrdered = useMemo(() => {
@@ -349,9 +352,15 @@ export default function EventsPage() {
                       </div>
                     </div>
                     <div className="bg-secondary/50 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-4">
-                      <div>
-                        <p className="text-foreground/60 text-xs">Fee</p>
-                        <p className="font-bold text-accent text-lg">₹{event.registrationFee}</p>
+                      <div className="flex items-baseline gap-4">
+                        <div>
+                          <p className="text-foreground/60 text-xs">Prize Pool</p>
+                          <p className="font-bold text-accent text-xl">{formatPrizeAmount(event.prizePool ?? 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-foreground/50 text-xs">Fee</p>
+                          <p className="font-medium text-foreground/70 text-sm">₹{event.registrationFee?.toLocaleString('en-IN') ?? 0}</p>
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-2 justify-end">
                         {registeredEventIds.has(event.id) ? (

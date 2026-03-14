@@ -89,7 +89,7 @@ export function FlagshipEventCard({
             <p className="text-foreground/75 text-sm sm:text-base line-clamp-2 mb-4">
               {event.longDescription}
             </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/70">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/70 mb-4">
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-accent" />
                 {event.date}
@@ -99,21 +99,23 @@ export function FlagshipEventCard({
                 {event.venue}
               </span>
               <span className="flex items-center gap-1.5">
-                <Trophy className="h-4 w-4 text-accent" />
-                {formatPrizeAmount(event.prizePool)} Prize
-              </span>
-              <span className="flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-accent" />
                 {event.registeredCount ?? 0}/{event.maxParticipants}
               </span>
             </div>
+
+            {/* Prize pool — main highlight */}
+            <div className="inline-flex flex-col rounded-xl bg-gradient-to-br from-accent/25 to-accent/10 border border-accent/40 px-5 py-3 mb-2 shadow-lg shadow-accent/10">
+              <span className="text-xs font-semibold text-accent uppercase tracking-wider">Prize Pool</span>
+              <span className="font-display text-2xl sm:text-3xl font-bold text-accent">
+                {formatPrizeAmount(event.prizePool ?? 0)}
+              </span>
+            </div>
+            <p className="text-foreground/50 text-sm">Fee ₹{event.registrationFee?.toLocaleString('en-IN') ?? 0}</p>
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-foreground/60 text-sm">Fee</span>
-              <span className="font-bold text-accent text-xl">₹{event.registrationFee?.toLocaleString('en-IN') ?? 0}</span>
-            </div>
+            <div className="hidden sm:block flex-1" />
             <div className="flex flex-wrap gap-2 sm:ml-auto">
               {isRegistered ? (
                 <span
