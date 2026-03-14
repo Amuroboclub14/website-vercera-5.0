@@ -116,9 +116,9 @@ export function Hero() {
             className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 pt-12 sm:pt-16 md:pt-20 pb-16 md:pb-0"
           >
             {[
-              { value: '50+', label: 'Events' },
-              { value: '5000+', label: 'Participants' },
-              { value: '50L+', label: 'Prize Pool' },
+              { value: '20+', label: 'Events' },
+              { value: '500+', label: 'Participants' },
+              { value: '2L+', label: 'Prize Pool' },
             ].map((stat, index) => (
               <motion.div
                 key={index}
