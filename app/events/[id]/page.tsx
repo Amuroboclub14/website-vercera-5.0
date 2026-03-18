@@ -180,7 +180,6 @@ export default function EventDetailPage({ params }: Props) {
   }
 
   const registeredCount = event.registeredCount ?? 0
-  const registrationPercentage = event.maxParticipants > 0 ? (registeredCount / event.maxParticipants) * 100 : 0
   const spotsAvailable = event.maxParticipants - registeredCount
   const isTeamEvent = event.isTeamEvent ?? false
   const isPaidRegistration = registration && (registration.status === 'paid' || registration.status === 'completed')
@@ -290,7 +289,7 @@ export default function EventDetailPage({ params }: Props) {
               </div>
 
               {/* Details Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-card/50 border border-border/50 rounded-lg p-4 hover:bg-card hover:border-accent/30 transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock size={20} className="text-accent" />
@@ -314,16 +313,6 @@ export default function EventDetailPage({ params }: Props) {
                     <span className="text-foreground/60 text-sm">Prize Pool</span>
                   </div>
                   <p className="font-semibold text-foreground">{formatPrizeAmount(event.prizePool)}</p>
-                </div>
-
-                <div className="bg-card/50 border border-border/50 rounded-lg p-4 hover:bg-card hover:border-accent/30 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users size={20} className="text-accent" />
-                    <span className="text-foreground/60 text-sm">Registrations</span>
-                  </div>
-                  <p className="font-semibold text-foreground">
-                    {registeredCount}/{event.maxParticipants}
-                  </p>
                 </div>
               </div>
 
@@ -432,23 +421,6 @@ export default function EventDetailPage({ params }: Props) {
                       Per-person fee • Team size: {teamSizeText}
                     </p>
                   )}
-                </div>
-
-                {/* Registration Progress */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-foreground/60 text-sm">Spots Available</span>
-                    <span className="font-semibold text-foreground">{spotsAvailable} left</span>
-                  </div>
-                  <div className="w-full bg-secondary rounded-full h-3">
-                    <div
-                      className="bg-accent h-3 rounded-full transition-all"
-                      style={{ width: `${registrationPercentage}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-foreground/60 text-xs">
-                    {registeredCount}/{event.maxParticipants} registered
-                  </p>
                 </div>
 
                 {/* CTA Button */}

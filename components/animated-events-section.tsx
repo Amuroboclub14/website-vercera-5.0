@@ -6,7 +6,7 @@ import { useEvents } from '@/hooks/use-events'
 import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { EventsComingSoon } from '@/components/events-coming-soon'
 import { FlagshipEventCard } from '@/components/flagship-event-card'
-import { ArrowRight, Users, BadgeCheck } from 'lucide-react'
+import { ArrowRight, BadgeCheck } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
 const containerVariants = {
@@ -187,9 +187,6 @@ interface EventCardProps {
 }
 
 function EventCard({ event, isRegistered }: EventCardProps) {
-  const count = event.registeredCount ?? 0
-  const registrationPercentage = event.maxParticipants > 0 ? (count / event.maxParticipants) * 100 : 0
-
   return (
     <motion.div variants={itemVariants} whileHover={{ y: -8 }} transition={{ duration: 0.2 }}>
       <Link href={`/events/${event.id}`}>
@@ -262,25 +259,6 @@ function EventCard({ event, isRegistered }: EventCardProps) {
                 <p className="font-bold text-accent text-lg">{formatPrizeAmount(event.prizePool)}</p>
               </motion.div>
               <p className="text-foreground/50 text-xs">Fee ₹{event.registrationFee?.toLocaleString('en-IN')}</p>
-            </div>
-
-            {/* Registration Bar */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-foreground/60 flex items-center gap-1">
-                  <Users size={14} /> {count}/{event.maxParticipants}
-                </span>
-                <span className="text-xs font-medium text-foreground/60">{Math.round(registrationPercentage)}%</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${registrationPercentage}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                  className="bg-accent h-2 rounded-full"
-                />
-              </div>
             </div>
 
             {/* CTA Button */}

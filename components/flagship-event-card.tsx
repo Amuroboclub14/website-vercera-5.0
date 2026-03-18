@@ -98,10 +98,6 @@ export function FlagshipEventCard({
                 <MapPin className="h-4 w-4 text-accent" />
                 {event.venue}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-accent" />
-                {event.registeredCount ?? 0}/{event.maxParticipants}
-              </span>
             </div>
 
             {/* Prize pool — main highlight */}

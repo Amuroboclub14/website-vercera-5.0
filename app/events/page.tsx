@@ -344,12 +344,6 @@ export default function EventsPage() {
                         <Trophy size={16} className="text-accent flex-shrink-0" />
                         <span className="text-xs">{formatPrizeAmount(event.prizePool)} Prize</span>
                       </div>
-                      <div className="flex items-center gap-2 text-foreground/70">
-                        <Users size={16} className="text-accent flex-shrink-0" />
-                        <span className="text-xs">
-                          {event.registeredCount ?? 0}/{event.maxParticipants}
-                        </span>
-                      </div>
                     </div>
                     <div className="bg-secondary/50 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-4">
                       <div className="flex items-baseline gap-4">

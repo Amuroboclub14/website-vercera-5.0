@@ -6,7 +6,7 @@ const faqs = [
   {
     question: 'When is Vercera 5.0 happening?',
     answer:
-      'Vercera 5.0 is scheduled for April 10-14, 2026. Different events will be held across these days. Check the event details for specific timings.',
+      'Vercera 5.0 is scheduled for April 17-21, 2026. Different events will be held across these days. Check the event details for specific timings.',
   },
   {
     question: 'Can I participate in multiple events?',
