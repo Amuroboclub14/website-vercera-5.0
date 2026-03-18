@@ -1,32 +1,32 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
 import { BrochureActions } from './print-actions'
 
-type EventsResponse = { events?: EventRecord[]; error?: string }
+type EventsResponse = { events?: EventRecord[]; eventsVisible?: boolean; error?: string }
 
-async function getEvents(): Promise<EventRecord[]> {
+async function getEvents(): Promise<{ events: EventRecord[]; eventsVisible: boolean }> {
   try {
-    const res = await fetch('/api/events', { cache: 'no-store' })
+    const h = await headers()
+    const proto = h.get('x-forwarded-proto') ?? 'http'
+    const host = h.get('x-forwarded-host') ?? h.get('host')
+    const base = host ? `${proto}://${host}` : 'http://localhost:3000'
+    const res = await fetch(new URL('/api/events', base), { cache: 'no-store' })
     const data = (await res.json()) as EventsResponse
-    return Array.isArray(data.events) ? data.events : []
+    return {
+      events: Array.isArray(data.events) ? data.events : [],
+      eventsVisible: data.eventsVisible === true,
+    }
   } catch {
-    return []
+    return { events: [], eventsVisible: false }
   }
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-accent/15 text-accent border border-accent/30 text-xs font-semibold">
-      {children}
-    </span>
-  )
-}
-
 export default async function BrochurePage() {
-  const events = await getEvents()
+  const { events, eventsVisible } = await getEvents()
 
   const flagship = [...events.filter((e) => e.flagship)].sort((a, b) => (b.prizePool ?? 0) - (a.prizePool ?? 0))
   const technical = [...events.filter((e) => e.category === 'technical' && !e.flagship)].sort((a, b) => (b.prizePool ?? 0) - (a.prizePool ?? 0))
@@ -40,19 +40,12 @@ export default async function BrochurePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <Badge>Official brochure</Badge>
               <h1 className="font-display text-4xl sm:text-5xl font-bold text-foreground leading-tight">
                 Vercera 5.0 — Events Brochure
               </h1>
               <p className="text-foreground/70 max-w-2xl">
                 A quick, shareable overview of all events. Tap any event to open the full page with complete details and rulebooks.
               </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Badge>Technical + Non-Tech</Badge>
-                <Badge>Prize pools</Badge>
-                <Badge>Fees</Badge>
-                <Badge>Rulebooks on event pages</Badge>
-              </div>
             </div>
 
             <div className="print:hidden">
@@ -61,12 +54,17 @@ export default async function BrochurePage() {
           </div>
 
           {events.length === 0 ? (
-            <div className="mt-10 bg-card border border-border rounded-2xl p-8 text-center">
-              <p className="text-foreground/70 text-lg">Brochure will be revealed soon.</p>
-              <p className="text-foreground/50 text-sm mt-2">Events aren&apos;t published yet.</p>
-              <div className="mt-6">
-                <Link href="/" className="inline-flex px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-semibold">
-                  Go to home
+            <div className="mt-10 border border-border rounded-2xl p-8 text-center">
+              <p className="text-foreground/80 text-lg font-semibold">No events are available right now.</p>
+              <p className="text-foreground/60 text-sm mt-2">
+                {eventsVisible === false ? 'Events are currently not published.' : 'Please try again in a moment.'}
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link href="/events" className="inline-flex px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-semibold">
+                  Open events page
+                </Link>
+                <Link href="/" className="inline-flex px-5 py-2.5 bg-secondary border border-border rounded-full font-semibold text-foreground">
+                  Back to home
                 </Link>
               </div>
             </div>
@@ -81,7 +79,6 @@ export default async function BrochurePage() {
                       </h2>
                       <p className="text-foreground/60 text-sm">Sorted by prize pool (highest first).</p>
                     </div>
-                    <Badge>Don&apos;t miss these</Badge>
                   </div>
 
                   <div className="grid grid-cols-1 gap-6">
@@ -129,29 +126,6 @@ export default async function BrochurePage() {
                     </div>
                   </div>
                 )}
-              </section>
-
-              <section className="bg-card border border-border rounded-2xl p-6 sm:p-8 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-display text-xl font-bold text-foreground">Want complete details?</h3>
-                  <p className="text-foreground/60 text-sm">
-                    Every event page has rules, team requirements, and downloadable documents (rulebooks) when available.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/events"
-                    className="px-5 py-2.5 bg-accent text-accent-foreground rounded-full font-semibold hover:bg-accent/90 transition-colors"
-                  >
-                    Open events page
-                  </Link>
-                  <Link
-                    href="/"
-                    className="px-5 py-2.5 bg-secondary border border-border rounded-full font-semibold text-foreground hover:bg-secondary/80 transition-colors"
-                  >
-                    Back to home
-                  </Link>
-                </div>
               </section>
             </div>
           )}
