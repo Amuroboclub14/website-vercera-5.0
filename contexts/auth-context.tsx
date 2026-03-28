@@ -18,7 +18,8 @@ export interface UserProfile {
   yearOfStudy: string
   heardAbout: string
   collegeName: string
-  isAMURoboclubMember: boolean
+  /** Legacy field from when membership was collected at signup; may be absent. */
+  isAMURoboclubMember?: boolean
   createdAt: string
 }
 

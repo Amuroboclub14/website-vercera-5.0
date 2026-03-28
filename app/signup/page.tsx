@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-import { verifyAMURoboclubMember } from '@/lib/verification'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { Eye, EyeOff } from 'lucide-react'
@@ -26,7 +25,6 @@ export default function SignupPage() {
     yearOfStudy: '',
     heardAbout: '',
     collegeName: '',
-    isAMURoboclubMember: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -51,7 +49,7 @@ export default function SignupPage() {
     const facultyNo = formData.facultyNumber.trim() || 'N/A'
     const enrollNo = formData.enrollmentNumber.trim() || 'N/A'
 
-    if (!formData.fullName || !formData.whatsappNumber || !formData.courseOfStudy || !formData.department || !formData.yearOfStudy || !formData.heardAbout || !formData.collegeName || !formData.isAMURoboclubMember || !formData.email || !formData.password) {
+    if (!formData.fullName || !formData.whatsappNumber || !formData.courseOfStudy || !formData.department || !formData.yearOfStudy || !formData.heardAbout || !formData.collegeName || !formData.email || !formData.password) {
       setError('Please fill in all required fields')
       setIsLoading(false)
       return
@@ -75,27 +73,25 @@ export default function SignupPage() {
       return
     }
 
-    if (formData.isAMURoboclubMember === 'yes') {
-      if (!facultyNo || facultyNo === 'N/A' || !enrollNo || enrollNo === 'N/A') {
-        setError('Faculty number and Enrollment number are required for AMURoboclub members')
-        setIsLoading(false)
-        return
-      }
-      setError('Verifying AMURoboclub membership...')
-      const result = await verifyAMURoboclubMember({
-        enrollmentNumber: enrollNo,
-        facultyNumber: facultyNo,
-        mobile: formData.whatsappNumber.trim(),
-        email: formData.email.trim().toLowerCase(),
-      })
-      if (!result.verified) {
-        setError(result.error || 'Membership verification failed')
-        setIsLoading(false)
-        return
-      }
-    }
-
     try {
+      const emailNorm = formData.email.trim().toLowerCase()
+      const checkRes = await fetch('/api/signup/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailNorm }),
+      })
+      const checkData = await checkRes.json().catch(() => ({}))
+      if (!checkRes.ok) {
+        setError(checkData.error || 'Could not verify email. Please try again.')
+        setIsLoading(false)
+        return
+      }
+      if (checkData.available !== true) {
+        setError(checkData.error || 'This email is already registered. Please sign in.')
+        setIsLoading(false)
+        return
+      }
+
       // Get a unique Vercera ID from the server (client cannot query Firestore before auth)
       const allocRes = await fetch('/api/signup/allocate-vercera-id', { method: 'POST' })
       const allocData = await allocRes.json().catch(() => ({}))
@@ -106,12 +102,12 @@ export default function SignupPage() {
       }
       const verceraId = allocData.verceraId as string
 
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email.trim(), formData.password)
+      const userCredential = await createUserWithEmailAndPassword(auth, emailNorm, formData.password)
       const user = userCredential.user
 
       const profile = {
         uid: user.uid,
-        email: formData.email.trim().toLowerCase(),
+        email: emailNorm,
         fullName: formData.fullName.trim(),
         verceraId,
         whatsappNumber: formData.whatsappNumber.trim(),
@@ -122,7 +118,6 @@ export default function SignupPage() {
         yearOfStudy: formData.yearOfStudy,
         heardAbout: formData.heardAbout,
         collegeName: formData.collegeName.trim(),
-        isAMURoboclubMember: formData.isAMURoboclubMember === 'yes',
         createdAt: new Date().toISOString(),
       }
 
@@ -162,8 +157,6 @@ export default function SignupPage() {
       setIsLoading(false)
     }
   }
-
-  const isMember = formData.isAMURoboclubMember === 'yes'
 
   return (
     <main className="min-h-screen bg-background">
@@ -239,23 +232,6 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <label htmlFor="collegeName" className="block text-sm font-medium text-foreground">University/College Name *</label>
                 <input type="text" id="collegeName" name="collegeName" value={formData.collegeName} onChange={handleChange} placeholder="Your College" className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-accent" disabled={isLoading} required />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-foreground">Are you an AMURoboclub member? *</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="isAMURoboclubMember" value="yes" checked={formData.isAMURoboclubMember === 'yes'} onChange={handleChange} disabled={isLoading} className="accent-accent" />
-                    <span className="text-foreground">Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="isAMURoboclubMember" value="no" checked={formData.isAMURoboclubMember === 'no'} onChange={handleChange} disabled={isLoading} className="accent-accent" />
-                    <span className="text-foreground">No</span>
-                  </label>
-                </div>
-                {isMember && (
-                  <p className="text-xs text-foreground/60 mt-2">Enter same email, WhatsApp number, faculty no, and enrollment no you used for purchasing the membership.</p>
-                )}
               </div>
 
               <div className="border-t border-border pt-4 space-y-4">
