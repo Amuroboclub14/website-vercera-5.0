@@ -5,7 +5,8 @@ import { getVerceraFirestore, getOwnerUid } from '@/lib/firebase-admin'
 
 export type AdminLevel = 'owner' | 'super_admin' | 'event_admin'
 
-function getFirebaseAdminAuth() {
+/** Firebase Admin Auth for the Vercera project (shared with participant verification). */
+export function getVerceraAdminAuth() {
   const appName = 'vercera-admin-auth'
   if (getApps().some((app) => app.name === appName)) {
     return getAuth(getApps().find((a) => a.name === appName)!)
@@ -47,7 +48,7 @@ export async function verifyAdminWithLevel(
     const authHeader = request.headers.get('Authorization')
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
     if (!token) return null
-    const auth = getFirebaseAdminAuth()
+    const auth = getVerceraAdminAuth()
     const decoded = await auth.verifyIdToken(token)
     const level = await getAdminLevel(decoded.uid)
     if (!level) return null
@@ -69,7 +70,7 @@ export async function getAuthenticatedUserId(request: NextRequest): Promise<stri
     const authHeader = request.headers.get('Authorization')
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
     if (!token) return null
-    const auth = getFirebaseAdminAuth()
+    const auth = getVerceraAdminAuth()
     const decoded = await auth.verifyIdToken(token)
     return decoded.uid
   } catch {
