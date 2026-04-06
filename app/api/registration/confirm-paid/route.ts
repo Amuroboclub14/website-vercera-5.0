@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
     const {
       orderId,
       paymentId,
+      checkoutId,
       eventId,
       eventName,
       amount,
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     } = body as {
       orderId?: string
       paymentId?: string
+      checkoutId?: string
       eventId?: string
       eventName?: string
       amount?: number
@@ -118,6 +120,43 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getVerceraFirestore()
+
+    let sessionRef: FirebaseFirestore.DocumentReference | null = null
+    if (checkoutId) {
+      sessionRef = db.collection('ev_checkout_sessions').doc(checkoutId)
+      const sessionSnap = await sessionRef.get()
+      if (!sessionSnap.exists) {
+        return NextResponse.json({ error: 'Checkout session not found' }, { status: 404 })
+      }
+      const s = sessionSnap.data() as {
+        status?: string
+        expiresAtMs?: number
+        userId?: string
+        eventId?: string | null
+        bundleId?: string | null
+        eventName?: string
+        amountInr?: number
+      }
+      if (s.status === 'consumed') {
+        return NextResponse.json({ success: true, message: 'Checkout already consumed' })
+      }
+      if (!s.expiresAtMs || Date.now() > s.expiresAtMs) {
+        return NextResponse.json({ error: 'Checkout session expired' }, { status: 410 })
+      }
+      if (s.userId !== userId) {
+        return NextResponse.json({ error: 'Checkout session user mismatch' }, { status: 400 })
+      }
+      if ((s.bundleId ?? null) !== (bundleId ?? null) || (s.eventId ?? null) !== (eventId ?? null)) {
+        return NextResponse.json({ error: 'Checkout session product mismatch' }, { status: 400 })
+      }
+      if ((s.eventName ?? '') !== (eventName ?? '')) {
+        return NextResponse.json({ error: 'Checkout session event name mismatch' }, { status: 400 })
+      }
+      const sessionAmount = Number(s.amountInr ?? NaN)
+      if (!Number.isFinite(sessionAmount) || Math.round(sessionAmount * 100) !== Math.round(Number(amount) * 100)) {
+        return NextResponse.json({ error: 'Checkout session amount mismatch' }, { status: 400 })
+      }
+    }
 
     // Idempotency: if this order was already processed (registrations or transactions), return success
     const existingReg = await db.collection('registrations').where('razorpayOrderId', '==', orderId).limit(1).get()
@@ -348,6 +387,18 @@ export async function POST(request: NextRequest) {
         items: [{ name: eventName ?? 'Event', amount: amt }],
         totalAmount: amt,
       }).catch((e) => console.error('[confirm-paid] Receipt email failed', e))
+    }
+
+    if (sessionRef) {
+      await sessionRef.set(
+        {
+          status: 'consumed',
+          consumedAtMs: Date.now(),
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+        },
+        { merge: true }
+      )
     }
 
     return NextResponse.json({ success: true, message: 'Payment verified and registration saved' })
