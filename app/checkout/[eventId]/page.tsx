@@ -78,24 +78,41 @@ export default function CheckoutPage({ params }: Props) {
     e.preventDefault()
     if (!user || !profile || !event) return
 
-    const baseUrl = (process.env.NEXT_PUBLIC_EV_CHECKOUT_URL || 'https://www.continuumworks.app').replace(/\/$/, '')
     const returnUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard?payment=success` : 'https://www.vercera.in/dashboard?payment=success'
 
-    const params = new URLSearchParams({
-      eventId: event.id,
-      eventName: event.name,
-      amount: String(totalAmount),
-      userId: user.uid,
-      email: profile.email,
-      userName: profile.fullName || '',
-      returnUrl,
-    })
-    if (formData.additionalInfo?.trim()) {
-      params.set('additionalInfo', formData.additionalInfo.trim())
-    }
-
     setIsLoading(true)
-    window.location.href = `${baseUrl}/ev/checkout?${params.toString()}`
+    try {
+      const token = await user.getIdToken()
+      const sessionRes = await fetch('/api/ev/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          eventId: event.id,
+          returnUrl,
+          additionalInfo: formData.additionalInfo?.trim() || null,
+        }),
+      })
+      const sessionData = await sessionRes.json().catch(() => ({}))
+      if (!sessionRes.ok || !sessionData.checkoutId || !sessionData.checkoutUrl) {
+        throw new Error(sessionData.error || 'Failed to initialize checkout')
+      }
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = String(sessionData.checkoutUrl)
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = 'checkoutId'
+      input.value = String(sessionData.checkoutId)
+      form.appendChild(input)
+      document.body.appendChild(form)
+      form.submit()
+    } catch (error) {
+      console.error('Event checkout init failed:', error)
+      setIsLoading(false)
+    }
   }
 
   if (!user || !profile) {
