@@ -95,10 +95,12 @@ export async function POST(request: NextRequest) {
       expiresAtMs,
     })
 
+    const base = (process.env.NEXT_PUBLIC_EV_CHECKOUT_URL || 'https://www.continuumworks.app').replace(/\/$/, '')
     return NextResponse.json({
       checkoutId,
       expiresAtMs,
-      checkoutUrl: `${(process.env.NEXT_PUBLIC_EV_CHECKOUT_URL || 'https://www.continuumworks.app').replace(/\/$/, '')}/ev/checkout`,
+      /** POST target on Continuum: sets cookie then redirects to /ev/checkout (page only). */
+      checkoutUrl: `${base}/api/ev/checkout/init`,
     })
   } catch (error) {
     console.error('create-checkout-session error:', error)
