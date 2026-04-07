@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer'
 import { useEvent } from '@/hooks/use-events'
 import { ArrowLeft, Clock, MapPin, Users, Trophy, Check, BadgeCheck, QrCode, FileText, Cpu, Gamepad2 } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
-import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -230,64 +230,40 @@ export default function EventDetailPage({ params }: Props) {
         }
 
         setRegistration(reg)
-        // Team UI must be driven by real team membership (teams doc),
-        // because multiple registrations can exist for the same user+event.
-        //
-        // If we have a teamId, fetch by doc id.
-        // If teamId is missing but verceraTeamId exists, fetch by verceraTeamId.
-        // Finally, also try membership query (memberIds array-contains) as an extra safety net.
-        let teamIdToFetch: string | null = reg.teamId ?? null
+        // Fetch team through server API (Firebase Admin) so Firestore client rule/network issues
+        // cannot hide team details in UI.
+        setTeamLoading(true)
         try {
-          const teamsQ = query(
-            collection(db, 'teams'),
-            where('eventId', '==', event.id),
-            where('memberIds', 'array-contains', user.uid),
-            limit(1)
-          )
-          const teamMembershipSnap = await getDocs(teamsQ)
+          const token = await user.getIdToken()
+          const teamRes = await fetch(`/api/team/my?eventId=${encodeURIComponent(event.id)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          const teamData = await teamRes.json().catch(() => ({}))
           if (seq !== registrationLoadSeq.current) return
-          if (!teamMembershipSnap.empty) {
-            teamIdToFetch = teamMembershipSnap.docs[0].id
-          }
-        } catch {
-          // ignore and fall back to registration.teamId
-        }
-
-        if (!teamIdToFetch && reg.verceraTeamId) {
-          try {
-            const code = String(reg.verceraTeamId).trim().toUpperCase()
-            const byCodeQ = query(
-              collection(db, 'teams'),
-              where('verceraTeamId', '==', code),
-              limit(1)
-            )
-            const byCodeSnap = await getDocs(byCodeQ)
-            if (seq !== registrationLoadSeq.current) return
-            if (!byCodeSnap.empty) teamIdToFetch = byCodeSnap.docs[0].id
-          } catch {
-            // ignore
-          }
-        }
-
-        if (teamIdToFetch) {
-          setTeamLoading(true)
-          const teamSnap = await getDoc(doc(db, 'teams', teamIdToFetch))
-          if (seq !== registrationLoadSeq.current) return
-          if (teamSnap.exists()) {
-            const td = teamSnap.data() as Record<string, unknown>
+          if (teamRes.ok && teamData.team) {
+            const t = teamData.team as {
+              teamName?: string | null
+              verceraTeamId?: string
+              members?: TeamMember[]
+              size?: number
+              leaderUserId?: string | null
+            }
             setTeam({
-              teamName: (td.teamName as string | null | undefined) ?? null,
-              verceraTeamId: String(td.verceraTeamId || ''),
-              members: (td.members as TeamMember[]) || [],
-              size: (td.size as number | undefined) ?? undefined,
-              leaderUserId: (td.leaderUserId as string | undefined) ?? undefined,
+              teamName: t.teamName ?? null,
+              verceraTeamId: String(t.verceraTeamId || ''),
+              members: t.members ?? [],
+              size: t.size ?? undefined,
+              leaderUserId: t.leaderUserId ?? undefined,
             })
+          } else if (hasAnyTeamEvidence) {
+            // Keep lock/code to prevent UI flip; show fallback Team ID/QR while data resolves.
+            setTeam(null)
           } else {
             setTeam(null)
           }
-        } else if (hasAnyTeamEvidence) {
-          // Keep lock/code to prevent UI flip back to "Register" while team doc is transiently unavailable.
-          setTeam(null)
+        } catch {
+          // Keep lock/code fallback if we have evidence.
+          if (!hasAnyTeamEvidence) setTeam(null)
         }
       } catch {
         // Keep the latest known registration/team evidence on transient failures.
