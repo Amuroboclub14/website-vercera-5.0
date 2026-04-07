@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useMemo, useState } from 'react'
+import { use, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer'
 import { useEvent } from '@/hooks/use-events'
 import { ArrowLeft, Clock, MapPin, Users, Trophy, Check, BadgeCheck, QrCode, FileText, Cpu, Gamepad2 } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
-import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -41,6 +41,7 @@ type TeamDoc = {
   verceraTeamId: string
   members: TeamMember[]
   size?: number
+  leaderUserId?: string
 }
 
 export default function EventDetailPage({ params }: Props) {
@@ -62,9 +63,11 @@ export default function EventDetailPage({ params }: Props) {
   const [teamCodeInput, setTeamCodeInput] = useState('')
   const [teamActionLoading, setTeamActionLoading] = useState(false)
   const [teamActionError, setTeamActionError] = useState<string | null>(null)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [registrationRefresh, setRegistrationRefresh] = useState(0)
   const [eligibleFromPack, setEligibleFromPack] = useState(false)
   const [addingFromPack, setAddingFromPack] = useState(false)
+  const registrationLoadSeq = useRef(0)
 
   const teamSizeText = useMemo(() => {
     if (!event) return 'Solo'
@@ -101,9 +104,9 @@ export default function EventDetailPage({ params }: Props) {
     }
 
     const run = async () => {
+      const seq = ++registrationLoadSeq.current
       setRegLoading(true)
       setTeamLoading(false)
-      setTeam(null)
 
       try {
         const regsRef = collection(db, 'registrations')
@@ -111,8 +114,12 @@ export default function EventDetailPage({ params }: Props) {
         // Fetch all matches and pick the best one for correct UI (especially after team form/join).
         const q = query(regsRef, where('userId', '==', user.uid), where('eventId', '==', event.id))
         const snap = await getDocs(q)
+        if (seq !== registrationLoadSeq.current) return
         if (snap.empty) {
           setRegistration(null)
+          setTeam(null)
+          setTeamEvidenceLocked(false)
+          setLockedVerceraTeamId(null)
           return
         }
 
@@ -175,9 +182,6 @@ export default function EventDetailPage({ params }: Props) {
           const code = withNewestCode[0]?.verceraTeamId ?? evidenceCandidates[0]?.verceraTeamId ?? evidenceCandidates[0]?.teamId ?? null
           setTeamEvidenceLocked(true)
           setLockedVerceraTeamId(code)
-        } else {
-          setTeamEvidenceLocked(false)
-          setLockedVerceraTeamId(null)
         }
 
         const isPaid = (s?: string) => {
@@ -226,72 +230,48 @@ export default function EventDetailPage({ params }: Props) {
         }
 
         setRegistration(reg)
-        // Team UI must be driven by real team membership (teams doc),
-        // because multiple registrations can exist for the same user+event.
-        //
-        // If we have a teamId, fetch by doc id.
-        // If teamId is missing but verceraTeamId exists, fetch by verceraTeamId.
-        // Finally, also try membership query (memberIds array-contains) as an extra safety net.
-        let teamIdToFetch: string | null = reg.teamId ?? null
+        // Fetch team through server API (Firebase Admin) so Firestore client rule/network issues
+        // cannot hide team details in UI.
+        setTeamLoading(true)
         try {
-          const teamsQ = query(
-            collection(db, 'teams'),
-            where('eventId', '==', event.id),
-            where('memberIds', 'array-contains', user.uid),
-            limit(1)
-          )
-          const teamMembershipSnap = await getDocs(teamsQ)
-          if (!teamMembershipSnap.empty) {
-            teamIdToFetch = teamMembershipSnap.docs[0].id
-          }
-        } catch {
-          // ignore and fall back to registration.teamId
-        }
-
-        if (!teamIdToFetch && reg.verceraTeamId) {
-          try {
-            const code = String(reg.verceraTeamId).trim().toUpperCase()
-            const byCodeQ = query(
-              collection(db, 'teams'),
-              where('verceraTeamId', '==', code),
-              limit(1)
-            )
-            const byCodeSnap = await getDocs(byCodeQ)
-            if (!byCodeSnap.empty) teamIdToFetch = byCodeSnap.docs[0].id
-          } catch {
-            // ignore
-          }
-        }
-
-        if (teamIdToFetch) {
-          setTeamLoading(true)
-          const teamSnap = await getDoc(doc(db, 'teams', teamIdToFetch))
-          if (teamSnap.exists()) {
-            const td = teamSnap.data() as Record<string, unknown>
+          const token = await user.getIdToken()
+          const teamRes = await fetch(`/api/team/my?eventId=${encodeURIComponent(event.id)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          const teamData = await teamRes.json().catch(() => ({}))
+          if (seq !== registrationLoadSeq.current) return
+          if (teamRes.ok && teamData.team) {
+            const t = teamData.team as {
+              teamName?: string | null
+              verceraTeamId?: string
+              members?: TeamMember[]
+              size?: number
+              leaderUserId?: string | null
+            }
             setTeam({
-              teamName: (td.teamName as string | null | undefined) ?? null,
-              verceraTeamId: String(td.verceraTeamId || ''),
-              members: (td.members as TeamMember[]) || [],
-              size: (td.size as number | undefined) ?? undefined,
+              teamName: t.teamName ?? null,
+              verceraTeamId: String(t.verceraTeamId || ''),
+              members: t.members ?? [],
+              size: t.size ?? undefined,
+              leaderUserId: t.leaderUserId ?? undefined,
             })
+          } else if (hasAnyTeamEvidence) {
+            // Keep lock/code to prevent UI flip; show fallback Team ID/QR while data resolves.
+            setTeam(null)
           } else {
             setTeam(null)
           }
-        } else if (hasAnyTeamEvidence) {
-          // We had evidence in registrations but couldn't resolve the team doc.
-          // Treat as no active team so the user can form/join again.
-          setTeam(null)
-          setTeamEvidenceLocked(false)
-          setLockedVerceraTeamId(null)
+        } catch {
+          // Keep lock/code fallback if we have evidence.
+          if (!hasAnyTeamEvidence) setTeam(null)
         }
       } catch {
-        setRegistration(null)
-        setTeam(null)
-        setTeamEvidenceLocked(false)
-        setLockedVerceraTeamId(null)
+        // Keep the latest known registration/team evidence on transient failures.
       } finally {
-        setRegLoading(false)
-        setTeamLoading(false)
+        if (seq === registrationLoadSeq.current) {
+          setRegLoading(false)
+          setTeamLoading(false)
+        }
       }
     }
 
@@ -391,6 +371,27 @@ export default function EventDetailPage({ params }: Props) {
       setTeamActionError(err instanceof Error ? err.message : 'Failed to join team')
     } finally {
       setTeamActionLoading(false)
+    }
+  }
+
+  const handleRemoveMember = async (memberUserId: string) => {
+    if (!user || !event || !team || removingMemberId) return
+    setTeamActionError(null)
+    setRemovingMemberId(memberUserId)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/team/remove-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId: event.id, memberUserId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to remove member')
+      setRegistrationRefresh((c) => c + 1)
+    } catch (err) {
+      setTeamActionError(err instanceof Error ? err.message : 'Failed to remove member')
+    } finally {
+      setRemovingMemberId(null)
     }
   }
 
@@ -773,16 +774,33 @@ export default function EventDetailPage({ params }: Props) {
                           <ul className="space-y-1 text-sm text-foreground/80">
                             {team.members.map((m) => (
                               <li key={m.userId} className="flex items-center justify-between gap-3">
-                                <span className="truncate">
-                                  {m.fullName}
-                                  {m.isLeader ? (
-                                    <span className="ml-2 text-xs text-foreground/50">(Leader)</span>
-                                  ) : null}
-                                </span>
-                                <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                                <div className="min-w-0 flex-1">
+                                  <span className="truncate block">
+                                    {m.fullName}
+                                    {m.isLeader ? (
+                                      <span className="ml-2 text-xs text-foreground/50">(Leader)</span>
+                                    ) : null}
+                                  </span>
+                                  <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                                </div>
+                                {team.leaderUserId === user?.uid && !m.isLeader ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveMember(m.userId)}
+                                    disabled={removingMemberId === m.userId}
+                                    className="px-2 py-1 rounded border border-destructive/40 text-destructive text-xs hover:bg-destructive/10 disabled:opacity-60"
+                                  >
+                                    {removingMemberId === m.userId ? 'Removing…' : 'Remove'}
+                                  </button>
+                                ) : null}
                               </li>
                             ))}
                           </ul>
+                          {team.leaderUserId === user?.uid ? (
+                            <p className="text-xs text-foreground/50">
+                              As team leader, you can remove members from this event team.
+                            </p>
+                          ) : null}
                         </div>
                       </>
                     ) : (lockedVerceraTeamId || registration?.verceraTeamId) ? (
