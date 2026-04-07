@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useMemo, useState } from 'react'
+import { use, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
@@ -65,6 +65,7 @@ export default function EventDetailPage({ params }: Props) {
   const [registrationRefresh, setRegistrationRefresh] = useState(0)
   const [eligibleFromPack, setEligibleFromPack] = useState(false)
   const [addingFromPack, setAddingFromPack] = useState(false)
+  const registrationLoadSeq = useRef(0)
 
   const teamSizeText = useMemo(() => {
     if (!event) return 'Solo'
@@ -101,9 +102,9 @@ export default function EventDetailPage({ params }: Props) {
     }
 
     const run = async () => {
+      const seq = ++registrationLoadSeq.current
       setRegLoading(true)
       setTeamLoading(false)
-      setTeam(null)
 
       try {
         const regsRef = collection(db, 'registrations')
@@ -111,8 +112,12 @@ export default function EventDetailPage({ params }: Props) {
         // Fetch all matches and pick the best one for correct UI (especially after team form/join).
         const q = query(regsRef, where('userId', '==', user.uid), where('eventId', '==', event.id))
         const snap = await getDocs(q)
+        if (seq !== registrationLoadSeq.current) return
         if (snap.empty) {
           setRegistration(null)
+          setTeam(null)
+          setTeamEvidenceLocked(false)
+          setLockedVerceraTeamId(null)
           return
         }
 
@@ -175,9 +180,6 @@ export default function EventDetailPage({ params }: Props) {
           const code = withNewestCode[0]?.verceraTeamId ?? evidenceCandidates[0]?.verceraTeamId ?? evidenceCandidates[0]?.teamId ?? null
           setTeamEvidenceLocked(true)
           setLockedVerceraTeamId(code)
-        } else {
-          setTeamEvidenceLocked(false)
-          setLockedVerceraTeamId(null)
         }
 
         const isPaid = (s?: string) => {
@@ -241,6 +243,7 @@ export default function EventDetailPage({ params }: Props) {
             limit(1)
           )
           const teamMembershipSnap = await getDocs(teamsQ)
+          if (seq !== registrationLoadSeq.current) return
           if (!teamMembershipSnap.empty) {
             teamIdToFetch = teamMembershipSnap.docs[0].id
           }
@@ -257,6 +260,7 @@ export default function EventDetailPage({ params }: Props) {
               limit(1)
             )
             const byCodeSnap = await getDocs(byCodeQ)
+            if (seq !== registrationLoadSeq.current) return
             if (!byCodeSnap.empty) teamIdToFetch = byCodeSnap.docs[0].id
           } catch {
             // ignore
@@ -266,6 +270,7 @@ export default function EventDetailPage({ params }: Props) {
         if (teamIdToFetch) {
           setTeamLoading(true)
           const teamSnap = await getDoc(doc(db, 'teams', teamIdToFetch))
+          if (seq !== registrationLoadSeq.current) return
           if (teamSnap.exists()) {
             const td = teamSnap.data() as Record<string, unknown>
             setTeam({
@@ -278,20 +283,16 @@ export default function EventDetailPage({ params }: Props) {
             setTeam(null)
           }
         } else if (hasAnyTeamEvidence) {
-          // We had evidence in registrations but couldn't resolve the team doc.
-          // Treat as no active team so the user can form/join again.
+          // Keep lock/code to prevent UI flip back to "Register" while team doc is transiently unavailable.
           setTeam(null)
-          setTeamEvidenceLocked(false)
-          setLockedVerceraTeamId(null)
         }
       } catch {
-        setRegistration(null)
-        setTeam(null)
-        setTeamEvidenceLocked(false)
-        setLockedVerceraTeamId(null)
+        // Keep the latest known registration/team evidence on transient failures.
       } finally {
-        setRegLoading(false)
-        setTeamLoading(false)
+        if (seq === registrationLoadSeq.current) {
+          setRegLoading(false)
+          setTeamLoading(false)
+        }
       }
     }
 
