@@ -41,6 +41,7 @@ type TeamDoc = {
   verceraTeamId: string
   members: TeamMember[]
   size?: number
+  leaderUserId?: string
 }
 
 export default function EventDetailPage({ params }: Props) {
@@ -62,6 +63,7 @@ export default function EventDetailPage({ params }: Props) {
   const [teamCodeInput, setTeamCodeInput] = useState('')
   const [teamActionLoading, setTeamActionLoading] = useState(false)
   const [teamActionError, setTeamActionError] = useState<string | null>(null)
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
   const [registrationRefresh, setRegistrationRefresh] = useState(0)
   const [eligibleFromPack, setEligibleFromPack] = useState(false)
   const [addingFromPack, setAddingFromPack] = useState(false)
@@ -278,6 +280,7 @@ export default function EventDetailPage({ params }: Props) {
               verceraTeamId: String(td.verceraTeamId || ''),
               members: (td.members as TeamMember[]) || [],
               size: (td.size as number | undefined) ?? undefined,
+              leaderUserId: (td.leaderUserId as string | undefined) ?? undefined,
             })
           } else {
             setTeam(null)
@@ -392,6 +395,27 @@ export default function EventDetailPage({ params }: Props) {
       setTeamActionError(err instanceof Error ? err.message : 'Failed to join team')
     } finally {
       setTeamActionLoading(false)
+    }
+  }
+
+  const handleRemoveMember = async (memberUserId: string) => {
+    if (!user || !event || !team || removingMemberId) return
+    setTeamActionError(null)
+    setRemovingMemberId(memberUserId)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/team/remove-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId: event.id, memberUserId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to remove member')
+      setRegistrationRefresh((c) => c + 1)
+    } catch (err) {
+      setTeamActionError(err instanceof Error ? err.message : 'Failed to remove member')
+    } finally {
+      setRemovingMemberId(null)
     }
   }
 
@@ -774,16 +798,33 @@ export default function EventDetailPage({ params }: Props) {
                           <ul className="space-y-1 text-sm text-foreground/80">
                             {team.members.map((m) => (
                               <li key={m.userId} className="flex items-center justify-between gap-3">
-                                <span className="truncate">
-                                  {m.fullName}
-                                  {m.isLeader ? (
-                                    <span className="ml-2 text-xs text-foreground/50">(Leader)</span>
-                                  ) : null}
-                                </span>
-                                <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                                <div className="min-w-0 flex-1">
+                                  <span className="truncate block">
+                                    {m.fullName}
+                                    {m.isLeader ? (
+                                      <span className="ml-2 text-xs text-foreground/50">(Leader)</span>
+                                    ) : null}
+                                  </span>
+                                  <span className="text-xs text-foreground/50">{m.verceraId}</span>
+                                </div>
+                                {team.leaderUserId === user?.uid && !m.isLeader ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveMember(m.userId)}
+                                    disabled={removingMemberId === m.userId}
+                                    className="px-2 py-1 rounded border border-destructive/40 text-destructive text-xs hover:bg-destructive/10 disabled:opacity-60"
+                                  >
+                                    {removingMemberId === m.userId ? 'Removing…' : 'Remove'}
+                                  </button>
+                                ) : null}
                               </li>
                             ))}
                           </ul>
+                          {team.leaderUserId === user?.uid ? (
+                            <p className="text-xs text-foreground/50">
+                              As team leader, you can remove members from this event team.
+                            </p>
+                          ) : null}
                         </div>
                       </>
                     ) : (lockedVerceraTeamId || registration?.verceraTeamId) ? (
