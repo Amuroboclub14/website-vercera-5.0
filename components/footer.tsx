@@ -139,9 +139,15 @@ export function Footer() {
         <div className="border-t border-border my-8"></div>
 
         {/* Bottom */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-foreground/60 text-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center text-foreground/60 text-sm gap-4">
           <p>&copy; {currentYear} Vercera Technical Fest. All rights reserved.</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
+          <div className="flex flex-wrap gap-4 md:gap-6 items-center justify-center">
+            <Link href="/terms" className="hover:text-accent transition-colors">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-accent transition-colors">
+              Privacy
+            </Link>
             <a href="https://chat.whatsapp.com/FntN1V4Z8FUBeng03hZ1vg?mode=gi_t" className="hover:text-accent transition-colors">
               WhatsApp Community
             </a>
