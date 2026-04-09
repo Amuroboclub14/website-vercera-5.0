@@ -235,6 +235,23 @@ export default function CheckoutPage({ params }: Props) {
                         </label>
                       </div>
                     </div>
+                    <div className="rounded-lg border border-border bg-card/50 p-4 text-sm text-foreground/75 space-y-2">
+                      <p>
+                        By proceeding, you acknowledge that organizers may cancel or suspend registration, deny/restrict
+                        entry in necessary circumstances, and process full/partial refunds where applicable.
+                      </p>
+                      <p>
+                        Please review our{' '}
+                        <Link href="/terms" className="text-accent hover:text-accent/80 underline underline-offset-2">
+                          Terms of Service
+                        </Link>{' '}
+                        and{' '}
+                        <Link href="/privacy" className="text-accent hover:text-accent/80 underline underline-offset-2">
+                          Privacy Policy
+                        </Link>
+                        .
+                      </p>
+                    </div>
 
                     <button
                       type="submit"

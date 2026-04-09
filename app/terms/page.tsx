@@ -61,7 +61,23 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-4">7. Changes to Terms</h2>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-4">7. Organizer Rights: Cancellation, Refunds, and Entry Restrictions</h2>
+              <p className="text-foreground/70 leading-relaxed">
+                Vercera 5.0 organizers reserve the right to cancel, suspend, or revoke a participant&apos;s registration under
+                necessary circumstances, including but not limited to rule violations, misconduct, fraudulent activity,
+                provision of false information, security concerns, or non-compliance with event instructions. In cases where
+                registration is cancelled at the organizer&apos;s discretion, organizers may issue a full or partial refund based
+                on the nature of the case and applicable operational constraints.
+              </p>
+              <p className="text-foreground/70 leading-relaxed mt-3">
+                Organizers also reserve the right to deny or restrict entry/participation at venue gates or during online
+                event operations when required for safety, discipline, technical integrity, capacity control, legal
+                compliance, or smooth conduct of the fest.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-4">8. Changes to Terms</h2>
               <p className="text-foreground/70 leading-relaxed">
                 We reserve the right to modify these terms at any time. Continued use of the platform after changes
                 constitutes acceptance of the new terms.
@@ -69,7 +85,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-4">8. Contact</h2>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-4">9. Contact</h2>
               <p className="text-foreground/70 leading-relaxed">
                 For questions about these terms, please contact us at info@vercera.com
               </p>
