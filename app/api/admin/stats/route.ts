@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
       db.collection('transactions').get(),
     ])
 
+    const activeParticipantIds = new Set(participantsSnap.docs.map((d) => d.id))
+
     const registrations = regsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<{
       id: string
       status?: string
@@ -28,6 +30,11 @@ export async function GET(request: NextRequest) {
       bundleId?: string
     }>
 
+    /** Registrations whose participant profile still exists (excludes deleted accounts). */
+    const registrationsActive = registrations.filter(
+      (r) => r.userId && activeParticipantIds.has(r.userId)
+    )
+
     const transactions = txSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<{
       id: string
       type?: string
@@ -37,18 +44,30 @@ export async function GET(request: NextRequest) {
       bundleId?: string
       bundleName?: string
       createdAt?: string
+      razorpayOrderId?: string
     }>
 
     const totalRevenue = Math.round(
       transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) * 100
     ) / 100
 
-    const totalRegistrations = registrations.length
-    const paidCount = registrations.filter((r) => r.status === 'paid' || r.status === 'completed').length
-    const attendedCount = registrations.filter((r) => r.attended === true).length
+    /** Distinct users who still have a profile and have at least one payment transaction (pack or event). */
+    const payingUserIdsActive = new Set<string>()
+    for (const t of transactions) {
+      const uid = t.userId
+      if (!uid || !activeParticipantIds.has(uid)) continue
+      if (Number(t.amount) > 0 && (t.type === 'pack' || t.type === 'event')) {
+        payingUserIdsActive.add(uid)
+      }
+    }
+    const distinctPayingParticipants = payingUserIdsActive.size
+
+    const totalRegistrations = registrationsActive.length
+    const paidCount = registrationsActive.filter((r) => r.status === 'paid' || r.status === 'completed').length
+    const attendedCount = registrationsActive.filter((r) => r.attended === true).length
 
     const eventWise: Record<string, { count: number; revenue: number; attended: number }> = {}
-    for (const r of registrations) {
+    for (const r of registrationsActive) {
       const eid = r.eventId || 'unknown'
       if (!eventWise[eid]) eventWise[eid] = { count: 0, revenue: 0, attended: 0 }
       eventWise[eid].count += 1
@@ -61,7 +80,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const recentRegistrations = registrations
+    const recentRegistrations = registrationsActive
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
       .slice(0, 10)
 
@@ -72,7 +91,9 @@ export async function GET(request: NextRequest) {
       eventNames[doc.id] = name ?? doc.id
     })
 
-    const packTransactions = transactions.filter((t) => t.type === 'pack' && t.userId)
+    const packTransactions = transactions.filter(
+      (t) => t.type === 'pack' && t.userId && activeParticipantIds.has(t.userId)
+    )
     const userIds = [...new Set(packTransactions.map((t) => t.userId).filter(Boolean))] as string[]
     const participantSnaps = await Promise.all(userIds.map((uid) => db.collection('vercera_5_participants').doc(uid).get()))
     const participantByUid: Record<string, { email?: string; fullName?: string }> = {}
@@ -84,7 +105,7 @@ export async function GET(request: NextRequest) {
       }
     })
     const regsByUserBundle: Record<string, number> = {}
-    for (const r of registrations) {
+    for (const r of registrationsActive) {
       const uid = r.userId
       const bundleId = r.bundleId
       if (uid && bundleId) {
@@ -92,10 +113,11 @@ export async function GET(request: NextRequest) {
         regsByUserBundle[key] = (regsByUserBundle[key] ?? 0) + 1
       }
     }
-    const packPurchases = packTransactions.map((t) => {
+    const packPurchaseRows = packTransactions.map((t) => {
       const profile = t.userId ? participantByUid[t.userId] : null
       const eventsAddedCount = t.userId && t.bundleId ? (regsByUserBundle[`${t.userId}_${t.bundleId}`] ?? 0) : 0
       return {
+        id: t.id,
         userId: t.userId,
         userEmail: profile?.email ?? null,
         userName: profile?.fullName ?? null,
@@ -103,22 +125,33 @@ export async function GET(request: NextRequest) {
         bundleName: t.bundleName ?? null,
         amount: Number(t.amount) ?? 0,
         createdAt: t.createdAt ?? null,
+        razorpayOrderId: t.razorpayOrderId ?? null,
         eventsAddedCount,
       }
     })
-    packPurchases.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+    packPurchaseRows.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+    // Dedupe duplicate transaction docs (e.g. double callback) per user+bundle+order
+    const packDeduped: typeof packPurchaseRows = []
+    const seenPack = new Set<string>()
+    for (const row of packPurchaseRows) {
+      const dedupeKey = `${row.userId}|${row.bundleId ?? ''}|${row.razorpayOrderId || row.id}`
+      if (seenPack.has(dedupeKey)) continue
+      seenPack.add(dedupeKey)
+      packDeduped.push(row)
+    }
 
     return NextResponse.json({
       totalParticipants: participantsSnap.size,
       totalTeams: teamsSnap.size,
       totalRegistrations,
       paidCount,
+      distinctPayingParticipants,
       attendedCount,
       totalRevenue,
       eventWise,
       eventNames,
       recentRegistrations,
-      packPurchases,
+      packPurchases: packDeduped,
     })
   } catch (err) {
     console.error('Admin stats error:', err)

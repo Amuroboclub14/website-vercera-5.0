@@ -77,7 +77,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4">9. Contact Us</h2>
               <p className="text-foreground/70 leading-relaxed">
-                For privacy inquiries, contact us at info@vercera.com or visit our contact page.
+                For privacy inquiries, contact us at chairperson@amuroboclub.com or visit our contact page.
               </p>
             </section>
           </div>

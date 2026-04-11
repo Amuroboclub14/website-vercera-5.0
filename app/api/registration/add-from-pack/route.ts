@@ -22,16 +22,6 @@ export async function POST(request: NextRequest) {
 
     const db = getVerceraFirestore()
 
-    const existingReg = await db
-      .collection('registrations')
-      .where('userId', '==', userId)
-      .where('eventId', '==', eventId)
-      .limit(1)
-      .get()
-    if (!existingReg.empty) {
-      return NextResponse.json({ error: 'Already registered for this event' }, { status: 400 })
-    }
-
     const packTx = await db
       .collection('transactions')
       .where('userId', '==', userId)
