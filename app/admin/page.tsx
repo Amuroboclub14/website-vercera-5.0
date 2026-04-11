@@ -8,6 +8,7 @@ import {
   Users,
   ListChecks,
   Receipt,
+  Wallet,
   CheckCircle,
   TrendingUp,
   Calendar,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react'
 
 interface PackPurchase {
+  id?: string
   userId: string | null
   userEmail: string | null
   userName: string | null
@@ -30,6 +32,8 @@ interface Stats {
   totalTeams: number
   totalRegistrations: number
   paidCount: number
+  /** Distinct participant profiles with at least one pack or event transaction (amount &gt; 0). */
+  distinctPayingParticipants: number
   attendedCount: number
   totalRevenue: number
   eventWise: Record<string, { count: number; revenue: number; attended: number }>
@@ -90,11 +94,18 @@ export default function AdminDashboardPage() {
       href: '/admin/participants',
     },
     {
-      label: 'Registrations',
+      label: 'Event entries',
       value: stats.totalRegistrations,
-      sub: `${stats.paidCount} paid`,
+      sub: `${stats.paidCount} with paid status (incl. bundle picks at ₹0)`,
       icon: ListChecks,
       href: '/admin/registrations',
+    },
+    {
+      label: 'Paid participants',
+      value: stats.distinctPayingParticipants,
+      sub: 'Distinct people with a pack or event payment',
+      icon: Wallet,
+      href: '/admin/transactions',
     },
     {
       label: 'Total Revenue',

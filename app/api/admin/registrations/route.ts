@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       await Promise.all(
         userIds.map(async (uid) => {
           const snap = await db.collection('vercera_5_participants').doc(uid).get()
+          if (!snap.exists) return
           const d = snap.data()
           participantMap[uid] = {
             fullName: (d?.fullName as string) || '—',
@@ -53,11 +54,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const enriched = registrations.map((r) => ({
-      ...r,
-      participantName: r.userId ? participantMap[r.userId]?.fullName ?? '—' : '—',
-      participantEmail: r.userId ? participantMap[r.userId]?.email ?? null : null,
-    }))
+    const enriched = registrations
+      .filter((r) => {
+        if (!r.userId) return false
+        // Exclude orphan rows (participant profile deleted from Firestore)
+        return participantMap[r.userId] !== undefined
+      })
+      .map((r) => ({
+        ...r,
+        participantName: r.userId ? participantMap[r.userId]?.fullName ?? '—' : '—',
+        participantEmail: r.userId ? participantMap[r.userId]?.email ?? null : null,
+      }))
 
     return NextResponse.json({ registrations: enriched })
   } catch (err) {
