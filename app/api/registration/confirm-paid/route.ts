@@ -158,13 +158,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Idempotency: if this order was already processed (registrations or transactions), return success
-    const existingReg = await db.collection('registrations').where('razorpayOrderId', '==', orderId).limit(1).get()
-    const existingTx = await db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1).get()
-    if (!existingReg.empty || !existingTx.empty) {
-      return NextResponse.json({ success: true, message: 'Payment already processed' })
-    }
-
     const expectedAmountInr = await getExpectedAmountInr(db, { bundleId, eventId })
     if (expectedAmountInr == null) {
       return NextResponse.json({ error: 'Invalid product or pricing not found' }, { status: 400 })
@@ -193,6 +186,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment is not successful' }, { status: 400 })
     }
 
+    const claimSnapEarly = await db.collection('razorpay_order_claims').doc(orderId).get()
+    const legacyTxForOrder = await db
+      .collection('transactions')
+      .where('razorpayOrderId', '==', orderId)
+      .limit(1)
+      .get()
+    if (claimSnapEarly.exists || !legacyTxForOrder.empty) {
+      if (sessionRef) {
+        await sessionRef.set(
+          {
+            status: 'consumed',
+            consumedAtMs: Date.now(),
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+          },
+          { merge: true }
+        )
+      }
+      return NextResponse.json({ success: true, message: 'Payment already processed' })
+    }
+
     let leaderVerceraId: string | null = null
     try {
       const userDoc = await db.collection('vercera_5_participants').doc(userId).get()
@@ -206,18 +220,22 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
 
-    if (bundleId) {
-      const alreadyBought = await db
-        .collection('transactions')
-        .where('userId', '==', userId)
-        .where('type', '==', 'pack')
-        .where('bundleId', '==', bundleId)
-        .limit(1)
-        .get()
-      if (!alreadyBought.empty) {
-        return NextResponse.json({ success: true, message: 'Pack already purchased' })
+    const finalizeCheckoutIfNeeded = async () => {
+      if (sessionRef) {
+        await sessionRef.set(
+          {
+            status: 'consumed',
+            consumedAtMs: Date.now(),
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+          },
+          { merge: true }
+        )
       }
+    }
 
+    // Pack purchase: atomic with razorpay_order_claims (same as verify-payment).
+    if (bundleId) {
       const bundleSnap = await db.collection('bundles').doc(bundleId).get()
       const bundleData = bundleSnap.exists ? (bundleSnap.data() as { type?: string; name?: string }) : null
       const bundleType = bundleData?.type ?? 'all_events'
@@ -225,17 +243,57 @@ export async function POST(request: NextRequest) {
       const hasAccommodation = bundleType === 'all_in_one'
       const totalAmount = expectedAmountInr
 
-      await db.collection('transactions').add({
-        userId,
-        type: 'pack',
-        bundleId,
-        bundleName: bundleName ?? null,
-        amount: totalAmount,
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        hasAccommodation,
-        createdAt: nowIso,
+      const packResult = await db.runTransaction(async (tx) => {
+        const claimRef = db.collection('razorpay_order_claims').doc(orderId)
+        const claimSnap = await tx.get(claimRef)
+        const orderDup = await tx.get(
+          db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1)
+        )
+        const packOwned = await tx.get(
+          db
+            .collection('transactions')
+            .where('userId', '==', userId)
+            .where('type', '==', 'pack')
+            .where('bundleId', '==', bundleId)
+            .limit(1)
+        )
+
+        if (claimSnap.exists || !orderDup.empty) {
+          return 'skip' as const
+        }
+        if (!packOwned.empty) {
+          return 'pack_owned' as const
+        }
+
+        const transRef = db.collection('transactions').doc()
+        tx.set(claimRef, {
+          kind: 'pack',
+          userId,
+          bundleId,
+          createdAt: nowIso,
+        })
+        tx.set(transRef, {
+          userId,
+          type: 'pack',
+          bundleId,
+          bundleName: bundleName ?? null,
+          amount: totalAmount,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          hasAccommodation,
+          createdAt: nowIso,
+        })
+        return 'written' as const
       })
+
+      if (packResult === 'skip') {
+        await finalizeCheckoutIfNeeded()
+        return NextResponse.json({ success: true, message: 'Payment already processed' })
+      }
+      if (packResult === 'pack_owned') {
+        await finalizeCheckoutIfNeeded()
+        return NextResponse.json({ success: true, message: 'Pack already purchased' })
+      }
 
       const userSnap = await db.collection('vercera_5_participants').doc(userId).get()
       const profileData = userSnap.exists ? (userSnap.data() as { email?: string; fullName?: string }) : null
@@ -250,22 +308,12 @@ export async function POST(request: NextRequest) {
           totalAmount,
         }).catch((e) => console.error('[confirm-paid] Receipt email failed', e))
       }
+      await finalizeCheckoutIfNeeded()
       return NextResponse.json({ success: true, message: 'Pack purchase recorded. Add events from the Events page or Dashboard.' })
     }
 
+    const evId = eventId as string
     const isTeamEvent = Boolean(team && team.isTeamEvent && team.members && team.members.length > 0)
-    const registrationsRef = db.collection('registrations')
-
-    if (!isTeamEvent) {
-      const existingSolo = await registrationsRef
-        .where('userId', '==', userId)
-        .where('eventId', '==', eventId)
-        .limit(1)
-        .get()
-      if (!existingSolo.empty) {
-        return NextResponse.json({ error: 'You are already registered for this event.' }, { status: 400 })
-      }
-    }
 
     if (isTeamEvent && team && team.members) {
       const teamSize = team.teamSize ?? team.members.length
@@ -274,104 +322,176 @@ export async function POST(request: NextRequest) {
       }
 
       const memberIds = team.members.map((m) => m.userId).filter(Boolean)
-      for (const memberId of memberIds) {
-        const existing = await registrationsRef
-          .where('userId', '==', memberId)
-          .where('eventId', '==', eventId)
-          .limit(1)
-          .get()
-        if (!existing.empty) {
-          return NextResponse.json(
-            { error: 'One or more team members are already registered for this event.' },
-            { status: 400 }
-          )
-        }
-      }
-
-      const verceraTeamId = generateVerceraTeamId()
-
-      const teamDoc = await db.collection('teams').add({
-        verceraTeamId,
-        eventId,
-        eventName,
-        teamName: team.teamName || null,
-        leaderUserId: userId,
-        leaderVerceraId,
-        members: team.members,
-        memberIds,
-        size: teamSize,
-        isTeamEvent: true,
-        amountPaid: expectedAmountInr,
-        paidByUserId: userId,
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        createdAt: nowIso,
-      })
-
-      const teamDocId = teamDoc.id
       const perMemberAmount = teamSize > 0 ? expectedAmountInr / teamSize : expectedAmountInr
       const teamAmount = expectedAmountInr
-      await db.collection('transactions').add({
-        userId,
-        type: 'event',
-        eventId,
-        eventName: eventName ?? null,
-        amount: teamAmount,
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        createdAt: nowIso,
-      })
-      const batch = db.batch()
-      for (const member of team.members) {
-        const regRef = db.collection('registrations').doc()
-        batch.set(regRef, {
-          userId: member.userId,
-          verceraId: member.verceraId || null,
-          eventId,
+
+      const teamResult = await db.runTransaction(async (tx) => {
+        const claimRef = db.collection('razorpay_order_claims').doc(orderId)
+        const claimSnap = await tx.get(claimRef)
+        const orderDup = await tx.get(
+          db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1)
+        )
+        const memberSnaps = []
+        for (const memberId of memberIds) {
+          const ms = await tx.get(
+            db
+              .collection('registrations')
+              .where('userId', '==', memberId)
+              .where('eventId', '==', evId)
+              .limit(1)
+          )
+          memberSnaps.push(ms)
+        }
+
+        if (claimSnap.exists || !orderDup.empty) {
+          return 'skip' as const
+        }
+        for (const snap of memberSnaps) {
+          if (!snap.empty) {
+            return 'member_registered' as const
+          }
+        }
+
+        const verceraTeamId = generateVerceraTeamId()
+        const teamRef = db.collection('teams').doc()
+        const transRef = db.collection('transactions').doc()
+
+        tx.set(claimRef, {
+          kind: 'event_team',
+          userId,
+          eventId: evId,
+          createdAt: nowIso,
+        })
+        tx.set(teamRef, {
+          verceraTeamId,
+          eventId: evId,
           eventName,
-          amount: perMemberAmount,
+          teamName: team.teamName || null,
+          leaderUserId: userId,
+          leaderVerceraId,
+          members: team.members,
+          memberIds,
+          size: teamSize,
+          isTeamEvent: true,
+          amountPaid: expectedAmountInr,
+          paidByUserId: userId,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          createdAt: nowIso,
+        })
+        tx.set(transRef, {
+          userId,
+          type: 'event',
+          eventId: evId,
+          eventName: eventName ?? null,
+          amount: teamAmount,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          createdAt: nowIso,
+        })
+
+        const teamDocId = teamRef.id
+        for (const member of team.members) {
+          const regRef = db.collection('registrations').doc()
+          tx.set(regRef, {
+            userId: member.userId,
+            verceraId: member.verceraId || null,
+            eventId: evId,
+            eventName,
+            amount: perMemberAmount,
+            registrationDate,
+            status: 'paid',
+            attended: false,
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            isTeamEvent: true,
+            isTeamLeader: Boolean(member.isLeader),
+            teamId: teamDocId,
+            verceraTeamId,
+            additionalInfo: additionalInfo || null,
+            createdAt: nowIso,
+          })
+        }
+        return 'ok' as const
+      })
+
+      if (teamResult === 'skip') {
+        await finalizeCheckoutIfNeeded()
+        return NextResponse.json({ success: true, message: 'Payment already processed' })
+      }
+      if (teamResult === 'member_registered') {
+        return NextResponse.json(
+          { error: 'One or more team members are already registered for this event.' },
+          { status: 400 }
+        )
+      }
+    } else {
+      const amt = expectedAmountInr
+      const soloResult = await db.runTransaction(async (tx) => {
+        const claimRef = db.collection('razorpay_order_claims').doc(orderId)
+        const claimSnap = await tx.get(claimRef)
+        const orderDup = await tx.get(
+          db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1)
+        )
+        const existingSolo = await tx.get(
+          db
+            .collection('registrations')
+            .where('userId', '==', userId)
+            .where('eventId', '==', evId)
+            .limit(1)
+        )
+
+        if (claimSnap.exists || !orderDup.empty) {
+          return 'skip' as const
+        }
+        if (!existingSolo.empty) {
+          return 'already_registered' as const
+        }
+
+        const transRef = db.collection('transactions').doc()
+        const regRef = db.collection('registrations').doc()
+        tx.set(claimRef, {
+          kind: 'event_solo',
+          userId,
+          eventId: evId,
+          createdAt: nowIso,
+        })
+        tx.set(transRef, {
+          userId,
+          type: 'event',
+          eventId: evId,
+          eventName: eventName ?? null,
+          amount: amt,
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          createdAt: nowIso,
+        })
+        tx.set(regRef, {
+          userId,
+          verceraId: leaderVerceraId,
+          eventId: evId,
+          eventName,
+          amount: amt,
           registrationDate,
           status: 'paid',
           attended: false,
           razorpayOrderId: orderId,
           razorpayPaymentId: paymentId,
-          isTeamEvent: true,
-          isTeamLeader: Boolean(member.isLeader),
-          teamId: teamDocId,
-          verceraTeamId,
+          teamName: teamName || null,
+          memberEmails: memberEmails || null,
           additionalInfo: additionalInfo || null,
           createdAt: nowIso,
         })
+        return 'ok' as const
+      })
+
+      if (soloResult === 'skip') {
+        await finalizeCheckoutIfNeeded()
+        return NextResponse.json({ success: true, message: 'Payment already processed' })
       }
-      await batch.commit()
-    } else {
-      const amt = expectedAmountInr
-      await db.collection('transactions').add({
-        userId,
-        type: 'event',
-        eventId,
-        eventName: eventName ?? null,
-        amount: amt,
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        createdAt: nowIso,
-      })
-      await db.collection('registrations').add({
-        userId,
-        verceraId: leaderVerceraId,
-        eventId,
-        eventName,
-        amount: amt,
-        registrationDate,
-        status: 'paid',
-        attended: false,
-        razorpayOrderId: orderId,
-        razorpayPaymentId: paymentId,
-        teamName: teamName || null,
-        memberEmails: memberEmails || null,
-        additionalInfo: additionalInfo || null,
-        createdAt: nowIso,
-      })
+      if (soloResult === 'already_registered') {
+        return NextResponse.json({ error: 'You are already registered for this event.' }, { status: 400 })
+      }
     }
 
     const userSnap = await db.collection('vercera_5_participants').doc(userId).get()
@@ -389,17 +509,7 @@ export async function POST(request: NextRequest) {
       }).catch((e) => console.error('[confirm-paid] Receipt email failed', e))
     }
 
-    if (sessionRef) {
-      await sessionRef.set(
-        {
-          status: 'consumed',
-          consumedAtMs: Date.now(),
-          razorpayOrderId: orderId,
-          razorpayPaymentId: paymentId,
-        },
-        { merge: true }
-      )
-    }
+    await finalizeCheckoutIfNeeded()
 
     return NextResponse.json({ success: true, message: 'Payment verified and registration saved' })
   } catch (err) {
