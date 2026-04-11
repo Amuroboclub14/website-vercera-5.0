@@ -47,7 +47,7 @@ const defaultEvent: Partial<EventRecord> = {
   rulebookUrls: [],
   attachmentUrls: [],
   order: 0,
-  excludedFromTechnicalBundle: false,
+  excludedFromBundles: false,
   includedInNonTechnicalBundle: false,
   flagship: false,
 }
@@ -161,7 +161,7 @@ export default function AdminEventsPage() {
       rulebookUrls: data.rulebookUrls || [],
       attachmentUrls: data.attachmentUrls || [],
       order: data.order ?? 0,
-      excludedFromTechnicalBundle: data.excludedFromTechnicalBundle ?? false,
+      excludedFromBundles: data.excludedFromBundles ?? data.excludedFromTechnicalBundle ?? false,
       includedInNonTechnicalBundle: data.includedInNonTechnicalBundle ?? false,
       flagship: data.flagship ?? false,
     })

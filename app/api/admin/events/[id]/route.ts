@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { FieldValue } from 'firebase-admin/firestore'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
 
@@ -64,6 +65,7 @@ export async function PUT(
       rulebookUrls,
       attachmentUrls,
       order,
+      excludedFromBundles,
       excludedFromTechnicalBundle,
       includedInNonTechnicalBundle,
       flagship,
@@ -107,7 +109,14 @@ export async function PUT(
     if (rulebookUrls !== undefined) data.rulebookUrls = Array.isArray(rulebookUrls) && rulebookUrls.length ? rulebookUrls : null
     if (attachmentUrls !== undefined) data.attachmentUrls = Array.isArray(attachmentUrls) && attachmentUrls.length ? attachmentUrls : null
     if (order !== undefined) data.order = order == null ? 0 : Number(order)
-    if (excludedFromTechnicalBundle !== undefined) data.excludedFromTechnicalBundle = Boolean(excludedFromTechnicalBundle)
+    if (excludedFromBundles !== undefined || excludedFromTechnicalBundle !== undefined) {
+      const v =
+        excludedFromBundles !== undefined
+          ? Boolean(excludedFromBundles)
+          : Boolean(excludedFromTechnicalBundle)
+      data.excludedFromBundles = v
+      data.excludedFromTechnicalBundle = FieldValue.delete()
+    }
     if (includedInNonTechnicalBundle !== undefined) data.includedInNonTechnicalBundle = Boolean(includedInNonTechnicalBundle)
     if (flagship !== undefined) data.flagship = Boolean(flagship)
 

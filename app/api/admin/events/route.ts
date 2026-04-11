@@ -136,7 +136,9 @@ export async function POST(request: NextRequest) {
       teamSizeMin: teamSizeMin != null ? Number(teamSizeMin) : undefined,
       teamSizeMax: teamSizeMax != null ? Number(teamSizeMax) : undefined,
       order: order != null ? Number(order) : 0,
-      excludedFromTechnicalBundle: Boolean(excludedFromTechnicalBundle),
+      excludedFromBundles: Boolean(
+        excludedFromBundles ?? excludedFromTechnicalBundle,
+      ),
       includedInNonTechnicalBundle: Boolean(includedInNonTechnicalBundle),
       flagship: Boolean(flagship),
       createdAt: now,
