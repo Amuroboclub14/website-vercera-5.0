@@ -31,8 +31,8 @@ export interface EventRecord {
   order?: number
   /** If true, shown as flagship event with distinct UI and on top of lists. */
   flagship?: boolean
-  /** Exclude from "all technical" bundle (e.g. Sumo Bots, Robowars sold separately). */
-  excludedFromTechnicalBundle?: boolean
+  /** Exclude from all packs/bundles (direct registration only). Legacy docs may use excludedFromTechnicalBundle. */
+  excludedFromBundles?: boolean
   /** Include in non-technical bundle (admin chooses which events). */
   includedInNonTechnicalBundle?: boolean
   createdAt?: string
