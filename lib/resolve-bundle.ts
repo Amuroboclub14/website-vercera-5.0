@@ -1,5 +1,6 @@
 import { getVerceraFirestore } from '@/lib/firebase-admin'
 import type { BundleRecord } from '@/lib/bundles-types'
+import { readExcludedFromAllBundles } from '@/lib/event-bundle-flags'
 
 export type ResolvedBundleItem = { eventId: string; eventName: string }
 
@@ -15,30 +16,43 @@ export async function resolveBundleToEvents(bundleId: string): Promise<ResolvedB
 
   const eventsSnap = await db.collection('events').get()
   const events = eventsSnap.docs.map((doc) => {
-    const d = doc.data() as { name?: string; category?: string; excludedFromTechnicalBundle?: boolean; order?: number }
-    return { id: doc.id, name: d.name ?? '', category: d.category, excludedFromTechnicalBundle: Boolean(d.excludedFromTechnicalBundle), order: d.order ?? 999 }
+    const d = doc.data() as {
+      name?: string
+      category?: string
+      excludedFromBundles?: boolean
+      excludedFromTechnicalBundle?: boolean
+      order?: number
+    }
+    return {
+      id: doc.id,
+      name: d.name ?? '',
+      category: d.category,
+      excludedFromAllBundles: readExcludedFromAllBundles(d),
+      order: d.order ?? 999,
+    }
   })
 
-  if (type === 'all_events' || type === 'all_in_one') {
-    return events
+  const sortAndMap = (list: typeof events) =>
+    list
       .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
       .map((e) => ({ eventId: e.id, eventName: e.name ?? '' }))
+
+  if (type === 'all_events' || type === 'all_in_one') {
+    return sortAndMap(events.filter((e) => !e.excludedFromAllBundles))
   }
 
   if (type === 'all_technical') {
-    return events
-      .filter((e) => e.category === 'technical' && !e.excludedFromTechnicalBundle)
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-      .map((e) => ({ eventId: e.id, eventName: e.name ?? '' }))
+    return sortAndMap(
+      events.filter((e) => e.category === 'technical' && !e.excludedFromAllBundles)
+    )
   }
 
   if (type === 'non_technical' || type === 'gaming_all') {
     if (eventIds.length === 0) return []
     const idSet = new Set(eventIds)
-    return events
-      .filter((e) => idSet.has(e.id))
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-      .map((e) => ({ eventId: e.id, eventName: e.name ?? '' }))
+    return sortAndMap(
+      events.filter((e) => idSet.has(e.id) && !e.excludedFromAllBundles)
+    )
   }
 
   return []

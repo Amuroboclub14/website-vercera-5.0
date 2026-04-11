@@ -10,7 +10,7 @@ import type { EventRecord } from '@/lib/events-types'
 const BUNDLE_TYPES: { value: BundleType; label: string }[] = [
   { value: 'all_in_one', label: 'All-in-one (accommodation + all events, external)' },
   { value: 'all_events', label: 'All events pack' },
-  { value: 'all_technical', label: 'All technical (excl. Sumo Bots, Robowars)' },
+  { value: 'all_technical', label: 'All technical (excl. events marked excluded from packs)' },
   { value: 'non_technical', label: 'Non-technical bundle (select events)' },
   { value: 'gaming_all', label: 'Gaming (all) – select events' },
 ]
@@ -203,7 +203,7 @@ export default function AdminBundlesPage() {
       </div>
 
       <p className="text-sm text-foreground/70">
-        Configure registration bundles (all-in-one, all events, technical, non-technical, gaming). For &quot;Non-technical&quot; and &quot;Gaming&quot; select which events are included. Events marked &quot;Excluded from technical bundle&quot; are omitted from the All technical bundle.
+        Configure registration bundles (all-in-one, all events, technical, non-technical, gaming). For &quot;Non-technical&quot; and &quot;Gaming&quot; select which events are included. Events marked &quot;Excluded from all packs&quot; in the event editor are omitted from every bundle type (including all-events and curated lists).
       </p>
 
       {loading ? (

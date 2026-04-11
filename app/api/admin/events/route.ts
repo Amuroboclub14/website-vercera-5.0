@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerceraFirestore } from "@/lib/firebase-admin";
 import { requireAdminLevel } from "@/lib/admin-auth";
 import type { EventRecord } from "@/lib/events-types";
+import { readExcludedFromAllBundles } from "@/lib/event-bundle-flags";
 
 const ALLOWED_LEVELS = ["owner", "super_admin"] as const;
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
         rulebookUrls: rulebookUrls.length ? rulebookUrls : undefined,
         attachmentUrls: Array.isArray(d.attachmentUrls) && d.attachmentUrls.length ? d.attachmentUrls : undefined,
         order: d.order != null ? Number(d.order) : undefined,
-        excludedFromTechnicalBundle: Boolean(d.excludedFromTechnicalBundle),
+        excludedFromBundles: readExcludedFromAllBundles(d),
         includedInNonTechnicalBundle: Boolean(d.includedInNonTechnicalBundle),
         flagship: Boolean(d.flagship),
         createdAt: d.createdAt,
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
       rulebookUrls,
       attachmentUrls,
       order,
+      excludedFromBundles,
       excludedFromTechnicalBundle,
       includedInNonTechnicalBundle,
       flagship,
@@ -134,7 +136,9 @@ export async function POST(request: NextRequest) {
       teamSizeMin: teamSizeMin != null ? Number(teamSizeMin) : undefined,
       teamSizeMax: teamSizeMax != null ? Number(teamSizeMax) : undefined,
       order: order != null ? Number(order) : 0,
-      excludedFromTechnicalBundle: Boolean(excludedFromTechnicalBundle),
+      excludedFromBundles: Boolean(
+        excludedFromBundles ?? excludedFromTechnicalBundle,
+      ),
       includedInNonTechnicalBundle: Boolean(includedInNonTechnicalBundle),
       flagship: Boolean(flagship),
       createdAt: now,

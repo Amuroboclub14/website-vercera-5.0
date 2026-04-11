@@ -2,7 +2,7 @@
 export type BundleType =
   | 'all_in_one'       // Accommodation + all events (external participants), e.g. Cut on 3099, Rs.2599
   | 'all_events'       // All events pack, e.g. Rs.249
-  | 'all_technical'    // All technical except excludedFromTechnicalBundle (Sumo Bots, Robowars separate)
+  | 'all_technical'    // All technical except events marked excluded from all bundles
   | 'non_technical'    // Admin-selected non-technical events, e.g. Rs.175
   | 'gaming_all'       // All gaming events, e.g. Rs.99
   | 'single_event'     // Placeholder for single-event product (use event checkout)
