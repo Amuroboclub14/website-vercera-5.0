@@ -144,12 +144,18 @@ export async function GET(request: NextRequest) {
       packDeduped.push(row)
     }
 
+    /** Distinct active participants with at least one paid pack purchase (after deduping duplicate tx docs). */
+    const distinctBundleBuyers = new Set(
+      packDeduped.filter((row) => Number(row.amount) > 0).map((r) => r.userId).filter(Boolean),
+    ).size
+
     return NextResponse.json({
       totalParticipants: participantsSnap.size,
       totalTeams: teamsSnap.size,
       totalRegistrations,
       paidCount,
       distinctPayingParticipants,
+      distinctBundleBuyers,
       attendedCount,
       totalRevenue,
       eventWise,

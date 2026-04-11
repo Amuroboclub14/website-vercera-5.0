@@ -34,6 +34,8 @@ interface Stats {
   paidCount: number
   /** Distinct participant profiles with at least one pack or event transaction (amount > 0). */
   distinctPayingParticipants: number
+  /** Distinct participants who purchased at least one bundle (pack tx, amount > 0). */
+  distinctBundleBuyers: number
   attendedCount: number
   totalRevenue: number
   eventWise: Record<string, { count: number; revenue: number; attended: number }>
@@ -106,6 +108,13 @@ export default function AdminDashboardPage() {
       sub: 'Distinct people with a pack or event payment',
       icon: Wallet,
       href: '/admin/transactions',
+    },
+    {
+      label: 'Bundle buyers',
+      value: stats.distinctBundleBuyers ?? 0,
+      sub: 'People who purchased a pack',
+      icon: Package,
+      href: '/admin/bundles',
     },
     {
       label: 'Total Revenue',
