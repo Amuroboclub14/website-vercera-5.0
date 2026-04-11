@@ -87,7 +87,7 @@ export default function TermsPage() {
             <section>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4">9. Contact</h2>
               <p className="text-foreground/70 leading-relaxed">
-                For questions about these terms, please contact us at info@vercera.com
+                For questions about these terms, please contact us at chairperson@amuroboclub.com
               </p>
             </section>
           </div>

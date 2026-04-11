@@ -22,16 +22,6 @@ export async function POST(request: NextRequest) {
 
     const db = getVerceraFirestore()
 
-    const existingReg = await db
-      .collection('registrations')
-      .where('userId', '==', userId)
-      .where('eventId', '==', eventId)
-      .limit(1)
-      .get()
-    if (!existingReg.empty) {
-      return NextResponse.json({ error: 'Already registered for this event' }, { status: 400 })
-    }
-
     const packTx = await db
       .collection('transactions')
       .where('userId', '==', userId)
@@ -75,7 +65,7 @@ export async function POST(request: NextRequest) {
     const nowIso = new Date().toISOString()
     const registrationDate = nowIso.split('T')[0]
 
-    await db.collection('registrations').add({
+    const regPayload = {
       userId,
       verceraId,
       eventId,
@@ -90,7 +80,28 @@ export async function POST(request: NextRequest) {
       isTeamEvent,
       fromPack: true,
       createdAt: nowIso,
-    })
+    }
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const dupQ = db
+          .collection('registrations')
+          .where('userId', '==', userId)
+          .where('eventId', '==', eventId)
+          .limit(5)
+        const dupSnap = await tx.get(dupQ)
+        if (!dupSnap.empty) {
+          throw new Error('ALREADY_REGISTERED')
+        }
+        const newRef = db.collection('registrations').doc()
+        tx.set(newRef, regPayload)
+      })
+    } catch (e) {
+      if (e instanceof Error && e.message === 'ALREADY_REGISTERED') {
+        return NextResponse.json({ error: 'Already registered for this event' }, { status: 400 })
+      }
+      throw e
+    }
 
     return NextResponse.json({ success: true, eventId, eventName: eventNameFromDoc })
   } catch (err) {
