@@ -32,7 +32,7 @@ interface Stats {
   totalTeams: number
   totalRegistrations: number
   paidCount: number
-  /** Distinct participant profiles with at least one pack or event transaction (amount &gt; 0). */
+  /** Distinct participant profiles with at least one pack or event transaction (amount > 0). */
   distinctPayingParticipants: number
   attendedCount: number
   totalRevenue: number
@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
     },
     {
       label: 'Paid participants',
-      value: stats.distinctPayingParticipants,
+      value: stats.distinctPayingParticipants ?? 0,
       sub: 'Distinct people with a pack or event payment',
       icon: Wallet,
       href: '/admin/transactions',
@@ -136,7 +136,7 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-3 sm:gap-4">
         {cards.map((card) => {
           const C = card.icon
           const content = (
@@ -270,8 +270,11 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {stats.packPurchases.map((p, i) => (
-                  <tr key={i} className="border-b border-border/50 last:border-0">
+                {(stats.packPurchases ?? []).map((p) => (
+                  <tr
+                    key={p.id ?? `${p.userId ?? ''}|${p.bundleId ?? ''}|${p.createdAt ?? ''}`}
+                    className="border-b border-border/50 last:border-0"
+                  >
                     <td className="py-2 px-2">
                       <p className="font-medium text-foreground truncate max-w-[140px]" title={p.userEmail ?? undefined}>
                         {p.userName || p.userEmail || p.userId || '—'}
