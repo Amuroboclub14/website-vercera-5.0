@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
+import { dedupeRegistrationsByUserEventTeam } from '@/lib/dedupe-registrations'
 
 const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
 
@@ -31,8 +32,8 @@ export async function GET(request: NextRequest) {
     }>
 
     /** Registrations whose participant profile still exists (excludes deleted accounts). */
-    const registrationsActive = registrations.filter(
-      (r) => r.userId && activeParticipantIds.has(r.userId)
+    const registrationsActive = dedupeRegistrationsByUserEventTeam(
+      registrations.filter((r) => r.userId && activeParticipantIds.has(r.userId))
     )
 
     const transactions = txSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<{
@@ -47,9 +48,12 @@ export async function GET(request: NextRequest) {
       razorpayOrderId?: string
     }>
 
-    const totalRevenue = Math.round(
-      transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) * 100
-    ) / 100
+    const transactionsActiveUser = transactions.filter(
+      (t) => t.userId && activeParticipantIds.has(t.userId)
+    )
+    const totalRevenue =
+      Math.round(transactionsActiveUser.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) * 100) /
+      100
 
     /** Distinct users who still have a profile and have at least one payment transaction (pack or event). */
     const payingUserIdsActive = new Set<string>()
@@ -73,7 +77,7 @@ export async function GET(request: NextRequest) {
       eventWise[eid].count += 1
       if (r.attended) eventWise[eid].attended += 1
     }
-    for (const t of transactions) {
+    for (const t of transactionsActiveUser) {
       if (t.type === 'event' && t.eventId) {
         if (!eventWise[t.eventId]) eventWise[t.eventId] = { count: 0, revenue: 0, attended: 0 }
         eventWise[t.eventId].revenue += Number(t.amount) || 0

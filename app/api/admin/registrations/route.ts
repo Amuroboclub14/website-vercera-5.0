@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
+import { dedupeRegistrationsByUserEventTeam } from '@/lib/dedupe-registrations'
 
 const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
 
@@ -54,17 +55,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const enriched = registrations
-      .filter((r) => {
-        if (!r.userId) return false
-        // Exclude orphan rows (participant profile deleted from Firestore)
-        return participantMap[r.userId] !== undefined
-      })
-      .map((r) => ({
-        ...r,
-        participantName: r.userId ? participantMap[r.userId]?.fullName ?? '—' : '—',
-        participantEmail: r.userId ? participantMap[r.userId]?.email ?? null : null,
-      }))
+    const enriched = dedupeRegistrationsByUserEventTeam(
+      registrations
+        .filter((r) => {
+          if (!r.userId) return false
+          // Exclude orphan rows (participant profile deleted from Firestore)
+          return participantMap[r.userId] !== undefined
+        })
+        .map((r) => ({
+          ...r,
+          participantName: r.userId ? participantMap[r.userId]?.fullName ?? '—' : '—',
+          participantEmail: r.userId ? participantMap[r.userId]?.email ?? null : null,
+        }))
+    ).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 
     return NextResponse.json({ registrations: enriched })
   } catch (err) {

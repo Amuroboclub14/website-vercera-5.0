@@ -126,13 +126,6 @@ export async function POST(request: NextRequest) {
 
     const db = getVerceraFirestore()
 
-    // Idempotency: if this order was already processed (registrations or transactions), return success
-    const existingReg = await db.collection('registrations').where('razorpayOrderId', '==', orderId).limit(1).get()
-    const existingTx = await db.collection('transactions').where('razorpayOrderId', '==', orderId).limit(1).get()
-    if (!existingReg.empty || !existingTx.empty) {
-      return NextResponse.json({ success: true, message: 'Payment already processed' })
-    }
-
     const expectedAmountInr = await getExpectedAmountInr(db, { bundleId, eventId })
     if (expectedAmountInr == null) {
       return NextResponse.json({ error: 'Invalid product or pricing not found' }, { status: 400 })
@@ -159,6 +152,16 @@ export async function POST(request: NextRequest) {
     }
     if (payment.status !== 'captured' && payment.status !== 'authorized') {
       return NextResponse.json({ error: 'Payment is not successful' }, { status: 400 })
+    }
+
+    const claimSnap = await db.collection('razorpay_order_claims').doc(orderId).get()
+    const legacyTxForOrder = await db
+      .collection('transactions')
+      .where('razorpayOrderId', '==', orderId)
+      .limit(1)
+      .get()
+    if (claimSnap.exists || !legacyTxForOrder.empty) {
+      return NextResponse.json({ success: true, message: 'Payment already processed' })
     }
 
     // Get leader's verceraId from profile
