@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         rulebookUrls: rulebookUrls.length ? rulebookUrls : undefined,
         attachmentUrls: Array.isArray(d.attachmentUrls) && d.attachmentUrls.length ? d.attachmentUrls : undefined,
         order: d.order != null ? Number(d.order) : undefined,
-        excludedFromBundles: readExcludedFromAllBundles(d as Record<string, unknown>),
+        excludedFromBundles: readExcludedFromAllBundles(d),
         includedInNonTechnicalBundle: Boolean(d.includedInNonTechnicalBundle),
         flagship: Boolean(d.flagship),
         createdAt: d.createdAt,

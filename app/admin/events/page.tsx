@@ -719,11 +719,11 @@ export default function AdminEventsPage() {
                   <label className="flex items-center gap-2 text-sm text-foreground/80">
                     <input
                       type="checkbox"
-                      checked={form.excludedFromTechnicalBundle ?? false}
-                      onChange={(e) => updateForm('excludedFromTechnicalBundle', e.target.checked)}
+                      checked={form.excludedFromBundles ?? false}
+                      onChange={(e) => updateForm('excludedFromBundles', e.target.checked)}
                       className="rounded border-border"
                     />
-                    Excluded from technical bundle (e.g. Sumo Bots, Robowars — sold separately)
+                    Excluded from all packs (register via direct checkout only)
                   </label>
                   <label className="flex items-center gap-2 text-sm text-foreground/80">
                     <input
