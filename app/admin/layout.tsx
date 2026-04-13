@@ -13,6 +13,7 @@ import {
   Receipt,
   QrCode,
   Users,
+  UsersRound,
   LogOut,
   ShieldCheck,
   Menu,
@@ -28,6 +29,7 @@ const fullNav = [
   { href: '/admin/transactions', label: 'Transactions', icon: Receipt },
   { href: '/admin/scan', label: 'Ticket Scan', icon: QrCode },
   { href: '/admin/participants', label: 'Participants', icon: Users },
+  { href: '/admin/teams', label: 'Teams', icon: UsersRound },
   { href: '/admin/admins', label: 'Manage admins', icon: ShieldCheck },
 ]
 const scanOnlyNav = [{ href: '/admin/scan', label: 'Ticket Scan', icon: QrCode }]
