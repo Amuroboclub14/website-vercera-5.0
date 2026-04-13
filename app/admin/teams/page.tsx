@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Download, Search, UsersRound } from 'lucide-react'
 import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import type { EventRecord } from '@/lib/events-types'
+import { useWheelScroll } from '@/hooks/use-wheel-scroll'
 
 interface TeamMember {
   userId?: string
@@ -38,6 +39,8 @@ export default function AdminTeamsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [eventFilter, setEventFilter] = useState('')
+  const tableScrollRef = useRef<HTMLDivElement>(null)
+  useWheelScroll(tableScrollRef, !loading)
 
   useEffect(() => {
     fetchWithAuth('/api/admin/events')
@@ -176,8 +179,13 @@ export default function AdminTeamsPage() {
       {loading ? (
         <div className="py-12 text-center text-foreground/60">Loading teams...</div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0">
-          <div className="overflow-x-auto overflow-y-auto max-h-[68vh]">
+        <div className="rounded-xl border border-border bg-card overflow-hidden -mx-4 sm:mx-0 flex flex-col max-h-[70vh] min-h-0">
+          <div
+            ref={tableScrollRef}
+            className="scroll-area-touch flex-1 min-h-0 overflow-x-auto overflow-y-auto"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            tabIndex={0}
+          >
             <table className="w-full text-sm min-w-[1100px]">
               <thead className="sticky top-0 bg-card border-b border-border z-10">
                 <tr>
@@ -214,14 +222,17 @@ export default function AdminTeamsPage() {
                         <p className="text-foreground/60 text-xs">{t.leaderEmail || '—'}</p>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="max-w-[260px] space-y-0.5">
-                          {t.members.slice(0, 3).map((m, i) => (
-                            <p key={`${t.id}-m-${i}`} className="text-xs text-foreground/80 truncate">
-                              {m.fullName || '—'} {m.isLeader ? '(L)' : ''} · {m.verceraId || m.userId || '—'}
-                            </p>
-                          ))}
-                          {t.members.length > 3 && (
-                            <p className="text-xs text-foreground/50">+{t.members.length - 3} more</p>
+                        <div className="max-w-[360px] space-y-1">
+                          {t.members.length === 0 ? (
+                            <p className="text-xs text-foreground/50">—</p>
+                          ) : (
+                            t.members.map((m, i) => (
+                              <p key={`${t.id}-m-${i}`} className="text-xs text-foreground/85 break-words">
+                                <span className="font-medium">{m.fullName || '—'}</span>
+                                {m.isLeader ? ' (L)' : ''} · {m.verceraId || m.userId || '—'}
+                                {m.email ? ` · ${m.email}` : ''}
+                              </p>
+                            ))
                           )}
                         </div>
                       </td>
