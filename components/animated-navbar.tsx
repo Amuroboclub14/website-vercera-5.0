@@ -39,11 +39,11 @@ export function Navbar() {
           {/* Logo */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-18 h-9 flex items-center justify-center">
+              <div className="w-[132px] h-[34px] flex items-center justify-center shrink-0">
                 <motion.img
                   src="/vercera_logo_full.png"
                   alt="Vercera"
-                  className="w-full h-full object-contain"
+                  className="block w-full h-full object-contain"
                   transition={{ duration: 0.6 }}
                 />
               </div>
