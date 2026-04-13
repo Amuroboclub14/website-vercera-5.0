@@ -3,6 +3,7 @@ import { getVerceraFirestore } from "@/lib/firebase-admin";
 import { requireAdminLevel } from "@/lib/admin-auth";
 import type { EventRecord } from "@/lib/events-types";
 import { readExcludedFromAllBundles } from "@/lib/event-bundle-flags";
+import { dedupeRegistrationsByUserEventTeam } from "@/lib/dedupe-registrations";
 
 const ALLOWED_LEVELS = ["owner", "super_admin"] as const;
 
@@ -12,13 +13,23 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
   try {
     const db = getVerceraFirestore();
-    const [eventsSnap, regsSnap] = await Promise.all([
+    const [eventsSnap, regsSnap, participantsSnap] = await Promise.all([
       db.collection("events").get(),
       db.collection("registrations").get(),
+      db.collection("vercera_5_participants").get(),
     ]);
+    const activeParticipantIds = new Set(participantsSnap.docs.map((d) => d.id));
+    const registrations = regsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Array<{
+      id: string;
+      userId?: string;
+      eventId?: string;
+    }>;
+    const registrationsActive = dedupeRegistrationsByUserEventTeam(
+      registrations.filter((r) => r.userId && activeParticipantIds.has(r.userId))
+    );
     const countByEventId: Record<string, number> = {};
-    regsSnap.docs.forEach((d) => {
-      const eid = d.data().eventId as string;
+    registrationsActive.forEach((r) => {
+      const eid = r.eventId;
       if (eid) countByEventId[eid] = (countByEventId[eid] || 0) + 1;
     });
     const eventsList: EventRecord[] = eventsSnap.docs.map((doc) => {

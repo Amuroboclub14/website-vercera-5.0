@@ -451,7 +451,7 @@ export default function AdminEventsPage() {
                 <div className="flex gap-4 sm:gap-6 text-sm flex-wrap">
                   <div>
                     <p className="text-foreground/50 text-xs">Registrations</p>
-                    <p className="font-semibold text-foreground">{event.registeredCount ?? stats.count}</p>
+                    <p className="font-semibold text-foreground">{stats.count}</p>
                   </div>
                   <div>
                     <p className="text-foreground/50 text-xs">Revenue</p>
