@@ -767,6 +767,106 @@ export default function AdminEventsPage() {
                   </label>
                 </div>
 
+                {/* Flagship sponsor / special award */}
+                <div className="rounded-xl border border-border/60 bg-secondary/20 p-4 space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground">Flagship sponsor & special category award</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Sponsor name</label>
+                      <input
+                        type="text"
+                        value={form.flagshipSponsor?.name ?? ''}
+                        onChange={(e) =>
+                          updateForm('flagshipSponsor', {
+                            ...(form.flagshipSponsor ?? {}),
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Stick®"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Sponsor website URL</label>
+                      <input
+                        type="url"
+                        value={form.flagshipSponsor?.websiteUrl ?? ''}
+                        onChange={(e) =>
+                          updateForm('flagshipSponsor', {
+                            ...(form.flagshipSponsor ?? {}),
+                            websiteUrl: e.target.value,
+                          })
+                        }
+                        placeholder="https://stickapp.club"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Sponsor logo URL</label>
+                      <input
+                        type="text"
+                        value={form.flagshipSponsor?.logoUrl ?? ''}
+                        onChange={(e) =>
+                          updateForm('flagshipSponsor', {
+                            ...(form.flagshipSponsor ?? {}),
+                            logoUrl: e.target.value,
+                          })
+                        }
+                        placeholder="/stick_logomark_coloured.svg"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Special category award name</label>
+                      <input
+                        type="text"
+                        value={form.specialCategoryAward?.name ?? ''}
+                        onChange={(e) =>
+                          updateForm('specialCategoryAward', {
+                            ...(form.specialCategoryAward ?? {}),
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="Stick Special Category Winner"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Special award logo URL</label>
+                      <input
+                        type="text"
+                        value={form.specialCategoryAward?.logoUrl ?? ''}
+                        onChange={(e) =>
+                          updateForm('specialCategoryAward', {
+                            ...(form.specialCategoryAward ?? {}),
+                            logoUrl: e.target.value,
+                          })
+                        }
+                        placeholder="/stick_logomark_coloured.svg"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium text-foreground/80 mb-1">Special award description</label>
+                      <textarea
+                        value={form.specialCategoryAward?.description ?? ''}
+                        onChange={(e) =>
+                          updateForm('specialCategoryAward', {
+                            ...(form.specialCategoryAward ?? {}),
+                            description: e.target.value,
+                          })
+                        }
+                        rows={2}
+                        placeholder="What this sponsor-declared category winner receives."
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Rulebook — upload */}
                 <div>
                   <label className="block text-sm font-medium text-foreground/80 mb-1">

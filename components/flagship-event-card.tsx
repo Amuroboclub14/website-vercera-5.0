@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Clock, MapPin, Trophy, Users, BadgeCheck, Sparkles } from 'lucide-react'
+import { Clock, MapPin, Trophy, Users, BadgeCheck, Sparkles, ExternalLink } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
 
@@ -89,6 +89,23 @@ export function FlagshipEventCard({
             <p className="text-foreground/75 text-sm sm:text-base line-clamp-2 mb-4">
               {event.longDescription}
             </p>
+            {event.flagship && event.flagshipSponsor?.name && (
+              <a
+                href={event.flagshipSponsor.websiteUrl || undefined}
+                target={event.flagshipSponsor.websiteUrl ? '_blank' : undefined}
+                rel={event.flagshipSponsor.websiteUrl ? 'noopener noreferrer' : undefined}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-2 mb-4 px-3 py-2 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/15 transition-colors"
+              >
+                {event.flagshipSponsor.logoUrl ? (
+                  <img src={event.flagshipSponsor.logoUrl} alt={event.flagshipSponsor.name} className="w-5 h-5 object-contain" />
+                ) : null}
+                <span className="text-sm text-foreground/90">
+                  Sponsored by <span className="font-semibold text-accent">{event.flagshipSponsor.name}</span>
+                </span>
+                {event.flagshipSponsor.websiteUrl ? <ExternalLink className="h-3.5 w-3.5 text-accent" /> : null}
+              </a>
+            )}
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/70 mb-4">
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-accent" />
