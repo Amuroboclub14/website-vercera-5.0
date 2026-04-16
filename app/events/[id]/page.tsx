@@ -64,6 +64,7 @@ export default function EventDetailPage({ params }: Props) {
   const [teamActionLoading, setTeamActionLoading] = useState(false)
   const [teamActionError, setTeamActionError] = useState<string | null>(null)
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null)
+  const [leavingTeam, setLeavingTeam] = useState(false)
   const [registrationRefresh, setRegistrationRefresh] = useState(0)
   const [eligibleFromPack, setEligibleFromPack] = useState(false)
   const [addingFromPack, setAddingFromPack] = useState(false)
@@ -182,6 +183,9 @@ export default function EventDetailPage({ params }: Props) {
           const code = withNewestCode[0]?.verceraTeamId ?? evidenceCandidates[0]?.verceraTeamId ?? evidenceCandidates[0]?.teamId ?? null
           setTeamEvidenceLocked(true)
           setLockedVerceraTeamId(code)
+        } else {
+          setTeamEvidenceLocked(false)
+          setLockedVerceraTeamId(null)
         }
 
         const isPaid = (s?: string) => {
@@ -392,6 +396,31 @@ export default function EventDetailPage({ params }: Props) {
       setTeamActionError(err instanceof Error ? err.message : 'Failed to remove member')
     } finally {
       setRemovingMemberId(null)
+    }
+  }
+
+  const handleLeaveTeam = async () => {
+    if (!user || !event || !team || leavingTeam) return
+    setTeamActionError(null)
+    setLeavingTeam(true)
+    try {
+      const token = await user.getIdToken()
+      const res = await fetch('/api/team/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ eventId: event.id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to leave team')
+      setTeamFormMode('idle')
+      setTeam(null)
+      setTeamEvidenceLocked(false)
+      setLockedVerceraTeamId(null)
+      setRegistrationRefresh((c) => c + 1)
+    } catch (err) {
+      setTeamActionError(err instanceof Error ? err.message : 'Failed to leave team')
+    } finally {
+      setLeavingTeam(false)
     }
   }
 
@@ -878,6 +907,16 @@ export default function EventDetailPage({ params }: Props) {
                               As team leader, you can remove members from this event team.
                             </p>
                           ) : null}
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={handleLeaveTeam}
+                              disabled={leavingTeam}
+                              className="px-3 py-1.5 rounded-lg border border-destructive/40 text-destructive text-xs hover:bg-destructive/10 disabled:opacity-60"
+                            >
+                              {leavingTeam ? 'Leaving…' : 'Leave team'}
+                            </button>
+                          </div>
                         </div>
                       </>
                     ) : (lockedVerceraTeamId || registration?.verceraTeamId) ? (
