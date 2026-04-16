@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (status) registrations = registrations.filter((r) => r.status === status)
 
     const userIds = [...new Set(registrations.map((r) => r.userId).filter(Boolean))] as string[]
-    const participantMap: Record<string, { fullName: string; email?: string }> = {}
+    const participantMap: Record<string, { fullName: string; email?: string; phone?: string }> = {}
     if (userIds.length > 0) {
       await Promise.all(
         userIds.map(async (uid) => {
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
           participantMap[uid] = {
             fullName: (d?.fullName as string) || '—',
             email: d?.email as string | undefined,
+            phone: d?.whatsappNumber as string | undefined,
           }
         })
       )
@@ -66,6 +67,7 @@ export async function GET(request: NextRequest) {
           ...r,
           participantName: r.userId ? participantMap[r.userId]?.fullName ?? '—' : '—',
           participantEmail: r.userId ? participantMap[r.userId]?.email ?? null : null,
+          participantPhone: r.userId ? participantMap[r.userId]?.phone ?? null : null,
         }))
     ).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
 

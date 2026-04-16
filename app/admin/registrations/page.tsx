@@ -18,6 +18,7 @@ interface Reg {
   verceraId?: string
   participantName?: string
   participantEmail?: string | null
+  participantPhone?: string | null
   verceraTeamId?: string
   teamId?: string
   createdAt?: string
@@ -76,6 +77,7 @@ export default function AdminRegistrationsPage() {
       (r.eventId || '').toLowerCase().includes(q) ||
       (r.verceraId || '').toLowerCase().includes(q) ||
       (r.participantName || '').toLowerCase().includes(q) ||
+      (r.participantPhone || '').toLowerCase().includes(q) ||
       (r.verceraTeamId || '').toLowerCase().includes(q) ||
       (r.status || '').toLowerCase().includes(q) ||
       (r.bundleName || '').toLowerCase().includes(q)
@@ -100,6 +102,7 @@ export default function AdminRegistrationsPage() {
       'Participant',
       'Vercera ID',
       'Email',
+      'Phone',
       'Event',
       'Pack',
       'Accommodation',
@@ -117,6 +120,7 @@ export default function AdminRegistrationsPage() {
           r.participantName ?? '',
           r.verceraId ?? '',
           r.participantEmail ?? '',
+          r.participantPhone ?? '',
           r.eventName || r.eventId || '',
           r.bundleName ?? '',
           r.hasAccommodation ? 'Yes' : 'No',
@@ -260,13 +264,14 @@ export default function AdminRegistrationsPage() {
             style={{ WebkitOverflowScrolling: 'touch' }}
             tabIndex={0}
           >
-            <table className="w-full text-sm min-w-[800px]">
+            <table className="w-full text-sm min-w-[940px]">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b border-border bg-secondary/30">
                   <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">
                     Participant
                   </th>
                   <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Vercera ID</th>
+                  <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Phone</th>
                   <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Event</th>
                   <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Pack</th>
                   <th className="text-left py-3 px-3 sm:px-4 font-medium text-foreground/80 text-xs sm:text-sm">Team</th>
@@ -279,7 +284,7 @@ export default function AdminRegistrationsPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-foreground/50">
+                    <td colSpan={10} className="py-8 text-center text-foreground/50">
                       No registrations match your filters.
                     </td>
                   </tr>
@@ -294,6 +299,9 @@ export default function AdminRegistrationsPage() {
                       </td>
                       <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-foreground/80 font-mono text-xs">
                         {r.verceraId || '—'}
+                      </td>
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-foreground/80 text-xs sm:text-sm">
+                        {r.participantPhone || '—'}
                       </td>
                       <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-foreground text-xs sm:text-sm">
                         {r.eventName || r.eventId || '—'}
