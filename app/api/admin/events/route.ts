@@ -65,6 +65,14 @@ export async function GET(request: NextRequest) {
         excludedFromBundles: readExcludedFromAllBundles(d),
         includedInNonTechnicalBundle: Boolean(d.includedInNonTechnicalBundle),
         flagship: Boolean(d.flagship),
+        flagshipSponsor:
+          d.flagshipSponsor && typeof d.flagshipSponsor === "object"
+            ? (d.flagshipSponsor as EventRecord["flagshipSponsor"])
+            : undefined,
+        specialCategoryAward:
+          d.specialCategoryAward && typeof d.specialCategoryAward === "object"
+            ? (d.specialCategoryAward as EventRecord["specialCategoryAward"])
+            : undefined,
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       };
@@ -116,6 +124,8 @@ export async function POST(request: NextRequest) {
       excludedFromTechnicalBundle,
       includedInNonTechnicalBundle,
       flagship,
+      flagshipSponsor,
+      specialCategoryAward,
     } = body;
 
     if (!name || !category) {
@@ -155,6 +165,28 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       updatedAt: now,
     };
+    if (flagshipSponsor && typeof flagshipSponsor === "object") {
+      const s = flagshipSponsor as {
+        name?: unknown;
+        logoUrl?: unknown;
+        websiteUrl?: unknown;
+        categories?: unknown;
+      };
+      data.flagshipSponsor = {
+        name: String(s.name ?? "").trim(),
+        logoUrl: s.logoUrl ? String(s.logoUrl) : undefined,
+        websiteUrl: s.websiteUrl ? String(s.websiteUrl) : undefined,
+        categories: Array.isArray(s.categories) ? s.categories.map((v) => String(v)).filter(Boolean) : undefined,
+      };
+    }
+    if (specialCategoryAward && typeof specialCategoryAward === "object") {
+      const a = specialCategoryAward as { name?: unknown; description?: unknown; logoUrl?: unknown };
+      data.specialCategoryAward = {
+        name: String(a.name ?? "").trim(),
+        description: String(a.description ?? "").trim(),
+        logoUrl: a.logoUrl ? String(a.logoUrl) : undefined,
+      };
+    }
     if (images.length) data.eventImages = images;
     if (Array.isArray(rulebookUrls) && rulebookUrls.length) data.rulebookUrls = rulebookUrls;
     if (Array.isArray(attachmentUrls) && attachmentUrls.length) data.attachmentUrls = attachmentUrls;

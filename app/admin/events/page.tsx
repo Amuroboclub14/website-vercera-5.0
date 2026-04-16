@@ -50,6 +50,17 @@ const defaultEvent: Partial<EventRecord> = {
   excludedFromBundles: false,
   includedInNonTechnicalBundle: false,
   flagship: false,
+  flagshipSponsor: {
+    name: '',
+    logoUrl: '',
+    websiteUrl: '',
+    categories: ['Event Sponsor', 'In-Kind Sponsor'],
+  },
+  specialCategoryAward: {
+    name: '',
+    description: '',
+    logoUrl: '',
+  },
 }
 
 export default function AdminEventsPage() {
@@ -164,6 +175,17 @@ export default function AdminEventsPage() {
       excludedFromBundles: data.excludedFromBundles ?? data.excludedFromTechnicalBundle ?? false,
       includedInNonTechnicalBundle: data.includedInNonTechnicalBundle ?? false,
       flagship: data.flagship ?? false,
+      flagshipSponsor: {
+        name: data.flagshipSponsor?.name ?? '',
+        logoUrl: data.flagshipSponsor?.logoUrl ?? '',
+        websiteUrl: data.flagshipSponsor?.websiteUrl ?? '',
+        categories: data.flagshipSponsor?.categories ?? ['Event Sponsor', 'In-Kind Sponsor'],
+      },
+      specialCategoryAward: {
+        name: data.specialCategoryAward?.name ?? '',
+        description: data.specialCategoryAward?.description ?? '',
+        logoUrl: data.specialCategoryAward?.logoUrl ?? '',
+      },
     })
     setRuleInput('')
     setImageFiles([])

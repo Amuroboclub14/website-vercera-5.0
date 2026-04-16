@@ -57,6 +57,14 @@ export async function GET() {
         attachmentUrls: Array.isArray(d.attachmentUrls) && d.attachmentUrls.length ? d.attachmentUrls : undefined,
         order: d.order != null ? Number(d.order) : undefined,
         flagship: Boolean(d.flagship),
+        flagshipSponsor:
+          d.flagshipSponsor && typeof d.flagshipSponsor === 'object'
+            ? (d.flagshipSponsor as EventRecord['flagshipSponsor'])
+            : undefined,
+        specialCategoryAward:
+          d.specialCategoryAward && typeof d.specialCategoryAward === 'object'
+            ? (d.specialCategoryAward as EventRecord['specialCategoryAward'])
+            : undefined,
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       }

@@ -31,6 +31,19 @@ export interface EventRecord {
   order?: number
   /** If true, shown as flagship event with distinct UI and on top of lists. */
   flagship?: boolean
+  /** Optional sponsor block for flagship event presentation. */
+  flagshipSponsor?: {
+    name: string
+    logoUrl?: string
+    websiteUrl?: string
+    categories?: string[]
+  }
+  /** Optional special category winner block (separate from 1st/2nd/3rd prizes). */
+  specialCategoryAward?: {
+    name: string
+    description: string
+    logoUrl?: string
+  }
   /** Exclude from all packs/bundles (direct registration only). Legacy docs may use excludedFromTechnicalBundle. */
   excludedFromBundles?: boolean
   /** Include in non-technical bundle (admin chooses which events). */
