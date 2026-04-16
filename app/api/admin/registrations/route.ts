@@ -3,7 +3,7 @@ import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
 import { dedupeRegistrationsByUserEventTeam } from '@/lib/dedupe-registrations'
 
-const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
+const ALLOWED_LEVELS = ['owner', 'super_admin', 'event_admin'] as const
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS])

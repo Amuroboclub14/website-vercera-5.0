@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useEvent } from '@/hooks/use-events'
-import { ArrowLeft, Clock, MapPin, Users, Trophy, Check, BadgeCheck, QrCode, FileText, Cpu, Gamepad2 } from 'lucide-react'
+import { ArrowLeft, Clock, MapPin, Users, Trophy, Check, BadgeCheck, QrCode, FileText, Cpu, Gamepad2, ExternalLink, Sparkles } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -477,6 +477,53 @@ export default function EventDetailPage({ params }: Props) {
                 <p className="text-foreground/70 leading-relaxed">{event.longDescription}</p>
               </div>
 
+              {/* Flagship sponsor block */}
+              {event.flagship && event.flagshipSponsor?.name && (
+                <div className="space-y-4">
+                  <h2 className="font-display text-2xl font-bold text-foreground">Flagship Sponsor</h2>
+                  <a
+                    href={event.flagshipSponsor.websiteUrl || undefined}
+                    target={event.flagshipSponsor.websiteUrl ? '_blank' : undefined}
+                    rel={event.flagshipSponsor.websiteUrl ? 'noopener noreferrer' : undefined}
+                    className="group block rounded-xl border border-accent/40 bg-gradient-to-r from-accent/10 to-secondary p-5 hover:border-accent/70 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          {(event.flagshipSponsor.categories?.length
+                            ? event.flagshipSponsor.categories
+                            : ['Event Sponsor', 'In-Kind Sponsor']
+                          ).map((cat) => (
+                            <span key={cat} className="px-2 py-0.5 rounded-full bg-accent/15 text-accent text-xs font-semibold">
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-sm text-foreground/70">Sponsored by</p>
+                        <p className="text-2xl font-display font-bold text-foreground">
+                          {event.flagshipSponsor.name}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {event.flagshipSponsor.logoUrl ? (
+                          <img
+                            src={event.flagshipSponsor.logoUrl}
+                            alt={event.flagshipSponsor.name}
+                            className="w-16 h-16 object-contain rounded-lg border border-border/50 bg-background/70 p-2"
+                          />
+                        ) : null}
+                        {event.flagshipSponsor.websiteUrl ? (
+                          <span className="inline-flex items-center gap-1 text-accent text-sm font-medium">
+                            Visit sponsor
+                            <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              )}
+
               {/* Rules Section */}
               <div className="space-y-4">
                 <h2 className="font-display text-2xl font-bold text-foreground">Rules & Guidelines</h2>
@@ -501,6 +548,36 @@ export default function EventDetailPage({ params }: Props) {
                     </div>
                   ))}
                 </div>
+                {event.specialCategoryAward?.name && (
+                  <div className="rounded-xl border border-accent/50 bg-gradient-to-r from-accent/15 via-secondary to-secondary/70 p-5 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      {event.specialCategoryAward.logoUrl ? (
+                        <img
+                          src={event.specialCategoryAward.logoUrl}
+                          alt={event.specialCategoryAward.name}
+                          className="w-32 h-32 object-contain rounded-lg border border-border/60 bg-background/70 p-2"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-lg border border-border/60 bg-background/70 flex items-center justify-center">
+                          <Sparkles className="h-6 w-6 text-accent" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+                          Sponsor-Declared Category Winner
+                        </p>
+                        <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
+                          {event.specialCategoryAward.name}
+                        </h3>
+                        {event.specialCategoryAward.description ? (
+                          <p className="text-foreground/75 mt-2 leading-relaxed">
+                            {event.specialCategoryAward.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Rulebook & attachments (optional) */}

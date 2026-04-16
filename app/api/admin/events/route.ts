@@ -5,11 +5,12 @@ import type { EventRecord } from "@/lib/events-types";
 import { readExcludedFromAllBundles } from "@/lib/event-bundle-flags";
 import { dedupeRegistrationsByUserEventTeam } from "@/lib/dedupe-registrations";
 
-const ALLOWED_LEVELS = ["owner", "super_admin"] as const;
+const READ_LEVELS = ["owner", "super_admin", "event_admin"] as const;
+const MUTATE_LEVELS = ["owner", "super_admin"] as const;
 
 /** GET: List all events (admin). Same as public but requires auth. */
 export async function GET(request: NextRequest) {
-  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS]);
+  const auth = await requireAdminLevel(request, [...READ_LEVELS]);
   if (auth instanceof NextResponse) return auth;
   try {
     const db = getVerceraFirestore();
@@ -65,6 +66,14 @@ export async function GET(request: NextRequest) {
         excludedFromBundles: readExcludedFromAllBundles(d),
         includedInNonTechnicalBundle: Boolean(d.includedInNonTechnicalBundle),
         flagship: Boolean(d.flagship),
+        flagshipSponsor:
+          d.flagshipSponsor && typeof d.flagshipSponsor === "object"
+            ? (d.flagshipSponsor as EventRecord["flagshipSponsor"])
+            : undefined,
+        specialCategoryAward:
+          d.specialCategoryAward && typeof d.specialCategoryAward === "object"
+            ? (d.specialCategoryAward as EventRecord["specialCategoryAward"])
+            : undefined,
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       };
@@ -87,7 +96,7 @@ export async function GET(request: NextRequest) {
 
 /** POST: Create event. Owner/super_admin only. */
 export async function POST(request: NextRequest) {
-  const auth = await requireAdminLevel(request, [...ALLOWED_LEVELS]);
+  const auth = await requireAdminLevel(request, [...MUTATE_LEVELS]);
   if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
@@ -116,6 +125,8 @@ export async function POST(request: NextRequest) {
       excludedFromTechnicalBundle,
       includedInNonTechnicalBundle,
       flagship,
+      flagshipSponsor,
+      specialCategoryAward,
     } = body;
 
     if (!name || !category) {
@@ -155,6 +166,28 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       updatedAt: now,
     };
+    if (flagshipSponsor && typeof flagshipSponsor === "object") {
+      const s = flagshipSponsor as {
+        name?: unknown;
+        logoUrl?: unknown;
+        websiteUrl?: unknown;
+        categories?: unknown;
+      };
+      data.flagshipSponsor = {
+        name: String(s.name ?? "").trim(),
+        logoUrl: s.logoUrl ? String(s.logoUrl) : undefined,
+        websiteUrl: s.websiteUrl ? String(s.websiteUrl) : undefined,
+        categories: Array.isArray(s.categories) ? s.categories.map((v) => String(v)).filter(Boolean) : undefined,
+      };
+    }
+    if (specialCategoryAward && typeof specialCategoryAward === "object") {
+      const a = specialCategoryAward as { name?: unknown; description?: unknown; logoUrl?: unknown };
+      data.specialCategoryAward = {
+        name: String(a.name ?? "").trim(),
+        description: String(a.description ?? "").trim(),
+        logoUrl: a.logoUrl ? String(a.logoUrl) : undefined,
+      };
+    }
     if (images.length) data.eventImages = images;
     if (Array.isArray(rulebookUrls) && rulebookUrls.length) data.rulebookUrls = rulebookUrls;
     if (Array.isArray(attachmentUrls) && attachmentUrls.length) data.attachmentUrls = attachmentUrls;

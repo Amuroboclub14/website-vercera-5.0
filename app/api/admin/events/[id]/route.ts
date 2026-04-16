@@ -69,6 +69,8 @@ export async function PUT(
       excludedFromTechnicalBundle,
       includedInNonTechnicalBundle,
       flagship,
+      flagshipSponsor,
+      specialCategoryAward,
     } = body
 
     const db = getVerceraFirestore()
@@ -119,6 +121,31 @@ export async function PUT(
     }
     if (includedInNonTechnicalBundle !== undefined) data.includedInNonTechnicalBundle = Boolean(includedInNonTechnicalBundle)
     if (flagship !== undefined) data.flagship = Boolean(flagship)
+    if (flagshipSponsor !== undefined) {
+      if (flagshipSponsor && typeof flagshipSponsor === 'object') {
+        const s = flagshipSponsor as { name?: unknown; logoUrl?: unknown; websiteUrl?: unknown; categories?: unknown }
+        data.flagshipSponsor = {
+          name: String(s.name ?? '').trim(),
+          logoUrl: s.logoUrl ? String(s.logoUrl) : undefined,
+          websiteUrl: s.websiteUrl ? String(s.websiteUrl) : undefined,
+          categories: Array.isArray(s.categories) ? s.categories.map((v) => String(v)).filter(Boolean) : undefined,
+        }
+      } else {
+        data.flagshipSponsor = null
+      }
+    }
+    if (specialCategoryAward !== undefined) {
+      if (specialCategoryAward && typeof specialCategoryAward === 'object') {
+        const a = specialCategoryAward as { name?: unknown; description?: unknown; logoUrl?: unknown }
+        data.specialCategoryAward = {
+          name: String(a.name ?? '').trim(),
+          description: String(a.description ?? '').trim(),
+          logoUrl: a.logoUrl ? String(a.logoUrl) : undefined,
+        }
+      } else {
+        data.specialCategoryAward = null
+      }
+    }
 
     await ref.update(data)
     return NextResponse.json({ success: true })
