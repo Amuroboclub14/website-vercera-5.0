@@ -46,7 +46,7 @@ export default function SponsorsPage() {
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-300/20 text-cyan-200 text-xs font-semibold">
                       <Award className="h-3.5 w-3.5" />
-                      Co-powered by (Title Sponsor)
+                      Co-powered by
                     </span>
                   </div>
 
@@ -54,7 +54,7 @@ export default function SponsorsPage() {
                     Harrison Group
                   </h2>
                   <p className="text-foreground/70 mt-2 max-w-2xl">
-                    Harrison Group is the co-powered-by title sponsor for Vercera 5.0.
+                    Harrison Group is the co-powered-by for Vercera 5.0.
                   </p>
                 </div>
 
