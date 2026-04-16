@@ -8,8 +8,8 @@ export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Content — interactive elements get pointer-events-auto */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 sm:pt-24 sm:pb-12 md:py-12 w-full pointer-events-none">
-        <div className="text-center space-y-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pt-32 sm:pb-12 md:pt-36 md:pb-14 w-full pointer-events-none">
+        <div className="text-center space-y-[2.25rem]">
           {/* Fest dates */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -48,23 +48,36 @@ export function Hero() {
             </motion.a>
           </motion.div>
 
-          {/* Main Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+          <div className="flex justify-center w-full">
+            <motion.img
+              className="w-[70%] h-full object-contain"
+              src="/vercera_full_logo.png"
+              alt="Vercera"
+              width={500}
+              height={500}
+            />
+          </div>
+          {/* Sponsors strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-tight"
+            transition={{ duration: 0.7, delay: 0.45 }}
+            className="pointer-events-auto flex justify-center"
           >
-            Where Innovation
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="block text-accent"
-            >
-              Meets Excellence
-            </motion.span>
-          </motion.h1>
+            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl border border-cyan-300/45 bg-cyan-300/12 shadow-lg shadow-cyan-300/10">
+              <span className="text-sm font-semibold text-cyan-200">Co-powered by</span>
+              <img
+                src="/harrison_logo.jpg.jpeg"
+                alt="Harrison Group"
+                className="w-9 h-9 rounded-full object-cover border border-cyan-200/50"
+              />
+              <span className="text-base font-bold text-foreground">Harrison Group</span>
+            </div>
+          </motion.div>
+
+          {/* Main Heading */}
+
+
 
           {/* Subheading */}
           <motion.p
@@ -130,25 +143,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Scroll Indicator — hidden on mobile to avoid overlapping stats */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:block"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-accent/50 rounded-full flex justify-center"
-        >
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-1.5 h-3 bg-accent rounded-full mt-2"
-          />
-        </motion.div>
-      </motion.div>
-    </section>
+      {/* Scroll indicator removed to avoid overlap with hero stats */}
+    </section >
   )
 }
