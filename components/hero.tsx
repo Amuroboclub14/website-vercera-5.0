@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Content — interactive elements get pointer-events-auto */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 sm:pt-24 sm:pb-12 md:py-12 w-full pointer-events-none">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pt-32 sm:pb-12 md:pt-36 md:pb-14 w-full pointer-events-none">
         <div className="text-center space-y-8">
           {/* Fest dates */}
           <motion.p
@@ -46,6 +46,24 @@ export function Hero() {
                 className="h-8 w-auto object-contain"
               />
             </motion.a>
+          </motion.div>
+
+          {/* Sponsors strip */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.45 }}
+            className="pointer-events-auto flex justify-center"
+          >
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-cyan-300/45 bg-cyan-300/12 shadow-lg shadow-cyan-300/10">
+              <span className="text-sm font-semibold text-cyan-200">Co-powered by</span>
+              <img
+                src="/harrison_logo.jpg.jpeg"
+                alt="Harrison Group"
+                className="w-9 h-9 rounded-full object-cover border border-cyan-200/50"
+              />
+              <span className="text-base font-bold text-foreground">Harrison Group</span>
+            </div>
           </motion.div>
 
           {/* Main Heading */}
@@ -130,25 +148,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Scroll Indicator — hidden on mobile to avoid overlapping stats */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:block"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-accent/50 rounded-full flex justify-center"
-        >
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-1.5 h-3 bg-accent rounded-full mt-2"
-          />
-        </motion.div>
-      </motion.div>
+      {/* Scroll indicator removed to avoid overlap with hero stats */}
     </section>
   )
 }
