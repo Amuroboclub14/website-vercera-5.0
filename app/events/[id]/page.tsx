@@ -555,7 +555,7 @@ export default function EventDetailPage({ params }: Props) {
                         <img
                           src={event.specialCategoryAward.logoUrl}
                           alt={event.specialCategoryAward.name}
-                          className="w-14 h-14 object-contain rounded-lg border border-border/60 bg-background/70 p-2"
+                          className="w-32 h-32 object-contain rounded-lg border border-border/60 bg-background/70 p-2"
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-lg border border-border/60 bg-background/70 flex items-center justify-center">
