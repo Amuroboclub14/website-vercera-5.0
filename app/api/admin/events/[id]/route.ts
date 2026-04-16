@@ -4,6 +4,10 @@ import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
 
 const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
+const cleanString = (v: unknown): string | null => {
+  const s = String(v ?? '').trim()
+  return s.length ? s : null
+}
 
 /** GET: Single event (admin). */
 export async function GET(
@@ -124,12 +128,22 @@ export async function PUT(
     if (flagshipSponsor !== undefined) {
       if (flagshipSponsor && typeof flagshipSponsor === 'object') {
         const s = flagshipSponsor as { name?: unknown; logoUrl?: unknown; websiteUrl?: unknown; categories?: unknown }
-        data.flagshipSponsor = {
-          name: String(s.name ?? '').trim(),
-          logoUrl: s.logoUrl ? String(s.logoUrl) : undefined,
-          websiteUrl: s.websiteUrl ? String(s.websiteUrl) : undefined,
-          categories: Array.isArray(s.categories) ? s.categories.map((v) => String(v)).filter(Boolean) : undefined,
-        }
+        const name = cleanString(s.name)
+        const logoUrl = cleanString(s.logoUrl)
+        const websiteUrl = cleanString(s.websiteUrl)
+        const categories = Array.isArray(s.categories)
+          ? s.categories.map((v) => String(v).trim()).filter(Boolean)
+          : []
+
+        // Never send undefined nested values to Firestore.
+        data.flagshipSponsor = name
+          ? {
+              name,
+              ...(logoUrl ? { logoUrl } : {}),
+              ...(websiteUrl ? { websiteUrl } : {}),
+              ...(categories.length ? { categories } : {}),
+            }
+          : null
       } else {
         data.flagshipSponsor = null
       }
@@ -137,11 +151,16 @@ export async function PUT(
     if (specialCategoryAward !== undefined) {
       if (specialCategoryAward && typeof specialCategoryAward === 'object') {
         const a = specialCategoryAward as { name?: unknown; description?: unknown; logoUrl?: unknown }
-        data.specialCategoryAward = {
-          name: String(a.name ?? '').trim(),
-          description: String(a.description ?? '').trim(),
-          logoUrl: a.logoUrl ? String(a.logoUrl) : undefined,
-        }
+        const name = cleanString(a.name)
+        const description = cleanString(a.description)
+        const logoUrl = cleanString(a.logoUrl)
+        data.specialCategoryAward = name
+          ? {
+              name,
+              description: description ?? '',
+              ...(logoUrl ? { logoUrl } : {}),
+            }
+          : null
       } else {
         data.specialCategoryAward = null
       }
