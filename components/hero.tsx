@@ -9,7 +9,7 @@ export function Hero() {
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Content — interactive elements get pointer-events-auto */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 sm:pt-32 sm:pb-12 md:pt-36 md:pb-14 w-full pointer-events-none">
-        <div className="text-center space-y-8">
+        <div className="text-center space-y-[2.25rem]">
           {/* Fest dates */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -48,6 +48,15 @@ export function Hero() {
             </motion.a>
           </motion.div>
 
+          <div className="flex justify-center w-full">
+            <motion.img
+              className="w-[70%] h-full object-contain"
+              src="/vercera_full_logo.png"
+              alt="Vercera"
+              width={500}
+              height={500}
+            />
+          </div>
           {/* Sponsors strip */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -55,7 +64,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.45 }}
             className="pointer-events-auto flex justify-center"
           >
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-cyan-300/45 bg-cyan-300/12 shadow-lg shadow-cyan-300/10">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl border border-cyan-300/45 bg-cyan-300/12 shadow-lg shadow-cyan-300/10">
               <span className="text-sm font-semibold text-cyan-200">Co-powered by</span>
               <img
                 src="/harrison_logo.jpg.jpeg"
@@ -67,22 +76,8 @@ export function Hero() {
           </motion.div>
 
           {/* Main Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground leading-tight"
-          >
-            Where Innovation
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="block text-accent"
-            >
-              Meets Excellence
-            </motion.span>
-          </motion.h1>
+
+
 
           {/* Subheading */}
           <motion.p
@@ -149,6 +144,6 @@ export function Hero() {
       </div>
 
       {/* Scroll indicator removed to avoid overlap with hero stats */}
-    </section>
+    </section >
   )
 }
