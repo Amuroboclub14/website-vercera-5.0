@@ -32,7 +32,12 @@ const fullNav = [
   { href: '/admin/teams', label: 'Teams', icon: UsersRound },
   { href: '/admin/admins', label: 'Manage admins', icon: ShieldCheck },
 ]
-const scanOnlyNav = [{ href: '/admin/scan', label: 'Ticket Scan', icon: QrCode }]
+const eventAdminNav = [
+  { href: '/admin/scan', label: 'Ticket Scan', icon: QrCode },
+  { href: '/admin/registrations', label: 'Registrations', icon: ListChecks },
+  { href: '/admin/participants', label: 'Participants', icon: Users },
+  { href: '/admin/teams', label: 'Teams', icon: UsersRound },
+]
 
 export default function AdminLayout({
   children,
@@ -44,7 +49,7 @@ export default function AdminLayout({
   const { user } = useAuth()
   const { isAdmin, level, adminChecked, loading } = useAdmin()
   const isEventAdminOnly = level === 'event_admin'
-  const nav = isEventAdminOnly ? scanOnlyNav : fullNav
+  const nav = isEventAdminOnly ? eventAdminNav : fullNav
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -71,8 +76,13 @@ export default function AdminLayout({
       clearTimeout(redirectTimeoutRef.current)
       redirectTimeoutRef.current = null
     }
-    if (isAdmin && level === 'event_admin' && pathname !== '/admin/scan' && pathname.startsWith('/admin')) {
-      router.replace('/admin/scan')
+    if (isAdmin && level === 'event_admin' && pathname.startsWith('/admin')) {
+      const allowedEventAdminPaths = new Set(
+        eventAdminNav.map((item) => item.href)
+      )
+      if (!allowedEventAdminPaths.has(pathname)) {
+        router.replace('/admin/scan')
+      }
     }
   }, [adminChecked, isAdmin, level, loading, user, router, pathname])
 
