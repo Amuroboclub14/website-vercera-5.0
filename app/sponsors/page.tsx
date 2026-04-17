@@ -34,14 +34,14 @@ export default function SponsorsPage() {
             </p>
           </motion.div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="rounded-2xl border border-cyan-400/35 bg-gradient-to-r from-cyan-400/10 to-card/50 p-6 sm:p-8"
+              className="rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 h-full flex flex-col"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 flex-1">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-300/20 text-cyan-200 text-xs font-semibold">
@@ -77,26 +77,27 @@ export default function SponsorsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="group block rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 hover:border-accent/60 hover:bg-card/60 transition-all"
+              className="group flex flex-col rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 hover:border-accent/60 hover:bg-card/60 transition-all h-full"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="min-w-0 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 flex-1">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/15 text-accent text-xs font-semibold shrink-0 h-fit">
-                    <Cpu className="h-3.5 w-3.5 shrink-0" />
-                    Technical partner
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
-                      Stick<sup className="text-sm align-super">®</sup>
-                    </h2>
-                    <p className="text-foreground/70 mt-2 max-w-2xl">
-                      Stick is Vercera 5.0&apos;s technical partner—powering tools and infrastructure behind the fest experience.
-                    </p>
-                    <p className="inline-flex items-center gap-1.5 mt-4 text-accent text-sm font-medium">
-                      Visit stickapp.club
-                      <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 flex-1">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold">
+                      <Cpu className="h-3.5 w-3.5" />
+                      Technical partner
+                    </span>
                   </div>
+
+                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+                    Stick<sup className="text-sm align-super">®</sup>
+                  </h2>
+                  <p className="text-foreground/70 mt-2 max-w-2xl">
+                    Stick is Vercera 5.0&apos;s technical partner—powering tools and infrastructure behind the fest experience.
+                  </p>
+                  <p className="inline-flex items-center gap-1.5 mt-4 text-accent text-sm font-medium">
+                    Visit stickapp.club
+                    <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </p>
                 </div>
 
                 <div className="shrink-0 self-center sm:self-start lg:self-center">
