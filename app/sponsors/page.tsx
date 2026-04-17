@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Award, Calendar, ExternalLink, Gift } from 'lucide-react'
+import { ArrowLeft, Award, Cpu, ExternalLink } from 'lucide-react'
 import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 
@@ -34,14 +34,14 @@ export default function SponsorsPage() {
             </p>
           </motion.div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="rounded-2xl border border-cyan-400/35 bg-gradient-to-r from-cyan-400/10 to-card/50 p-6 sm:p-8"
+              className="rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 h-full flex flex-col"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 flex-1">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-300/20 text-cyan-200 text-xs font-semibold">
@@ -77,18 +77,14 @@ export default function SponsorsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="group block rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 hover:border-accent/60 hover:bg-card/60 transition-all"
+              className="group flex flex-col rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-8 hover:border-accent/60 hover:bg-card/60 transition-all h-full"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 flex-1">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Event Sponsor
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold">
-                      <Gift className="h-3.5 w-3.5" />
-                      In-Kind Sponsor
+                      <Cpu className="h-3.5 w-3.5" />
+                      Technical partner
                     </span>
                   </div>
 
@@ -96,7 +92,7 @@ export default function SponsorsPage() {
                     Stick<sup className="text-sm align-super">®</sup>
                   </h2>
                   <p className="text-foreground/70 mt-2 max-w-2xl">
-                    Stick is supporting Vercera 5.0 as both our Event Sponsor and In-Kind Sponsor.
+                    Stick is Vercera 5.0&apos;s technical partner—powering tools and infrastructure behind the fest experience.
                   </p>
                   <p className="inline-flex items-center gap-1.5 mt-4 text-accent text-sm font-medium">
                     Visit stickapp.club
@@ -104,7 +100,7 @@ export default function SponsorsPage() {
                   </p>
                 </div>
 
-                <div className="shrink-0">
+                <div className="shrink-0 self-center sm:self-start lg:self-center">
                   <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl border border-border/60 bg-background/70 p-4 flex items-center justify-center">
                     <img
                       src="/stick_logomark_coloured.svg"

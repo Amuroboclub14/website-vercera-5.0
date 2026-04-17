@@ -23,11 +23,7 @@ export function FlagshipEventCard({
   onAddFromPack,
 }: FlagshipEventCardProps) {
   const router = useRouter()
-  const sponsor = event.flagshipSponsor?.name
-    ? event.flagshipSponsor
-    : event.flagship
-      ? { name: 'Stick®', logoUrl: '/stick_logomark_coloured.svg', websiteUrl: 'https://stickapp.club' }
-      : null
+  const sponsor = event.flagshipSponsor?.name ? event.flagshipSponsor : null
 
   const handleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('a, button')) return

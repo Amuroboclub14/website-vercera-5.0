@@ -57,12 +57,12 @@ export function Hero() {
               height={500}
             />
           </div>
-          {/* Sponsors strip */}
+          {/* Sponsors strip — co-powered + technical partner, horizontal */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.45 }}
-            className="pointer-events-auto flex justify-center"
+            className="pointer-events-auto flex flex-wrap justify-center items-stretch gap-3 max-w-3xl mx-auto"
           >
             <div className="flex items-center gap-3 px-4 py-2 rounded-2xl border border-cyan-300/45 bg-cyan-300/12 shadow-lg shadow-cyan-300/10">
               <span className="text-sm font-semibold text-cyan-200">Co-powered by</span>
@@ -73,6 +73,22 @@ export function Hero() {
               />
               <span className="text-base font-bold text-foreground">Harrison Group</span>
             </div>
+            <a
+              href="https://stickapp.club"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-2 rounded-2xl border border-accent/45 bg-accent/12 shadow-lg shadow-accent/10 hover:border-accent/70 hover:bg-accent/18 transition-colors"
+            >
+              <span className="text-sm font-semibold text-accent">Technical partner</span>
+              <img
+                src="/stick_logomark_coloured.svg"
+                alt="Stick"
+                className="w-9 h-9 object-contain"
+              />
+              <span className="text-base font-bold text-foreground">
+                Stick<sup className="text-xs align-super">®</sup>
+              </span>
+            </a>
           </motion.div>
 
           {/* Main Heading */}
