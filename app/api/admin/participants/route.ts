@@ -10,13 +10,10 @@ export async function GET(request: NextRequest) {
   try {
     const db = getVerceraFirestore()
     const { searchParams } = new URL(request.url)
-    const limit = Math.min(Number(searchParams.get('limit')) || 200, 500)
     const search = (searchParams.get('search') || '').trim().toLowerCase()
 
-    let query = db.collection('vercera_5_participants').limit(limit)
-
-    // Client-side filter when search is provided (Firestore has no full-text search)
-    const snapshot = await query.get()
+    /** Full list — same as admin/stats; client searches in-memory. */
+    const snapshot = await db.collection('vercera_5_participants').get()
     let participants = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
