@@ -4,6 +4,7 @@ import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admi
 import { getFirestore } from 'firebase-admin/firestore'
 import { generateVerceraTeamId } from '@/lib/vercera-team-id'
 import { sendPaymentReceipt } from '@/lib/mail'
+import { FEST_STATUS, paymentsAreClosed } from '@/lib/fest-status'
 
 function getVerceraFirestore() {
   const appName = 'vercera-firestore'
@@ -60,6 +61,10 @@ async function getExpectedAmountInr(
  */
 export async function POST(request: NextRequest) {
   try {
+    if (paymentsAreClosed()) {
+      return NextResponse.json({ error: FEST_STATUS.paymentsClosedMessage }, { status: 403 })
+    }
+
     const callbackSecret = request.headers.get('x-callback-secret')
     const expectedSecret = process.env.VERCERA_CALLBACK_SECRET
     if (!expectedSecret || callbackSecret !== expectedSecret) {

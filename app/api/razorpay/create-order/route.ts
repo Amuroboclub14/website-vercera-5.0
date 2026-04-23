@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
+import { FEST_STATUS, paymentsAreClosed } from '@/lib/fest-status'
 
 function getRazorpay() {
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
@@ -12,6 +13,10 @@ function getRazorpay() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (paymentsAreClosed()) {
+      return NextResponse.json({ error: FEST_STATUS.paymentsClosedMessage }, { status: 403 })
+    }
+
     const body = await request.json()
     const { amount, eventId, eventName, email, userId } = body
 

@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUserId, unauthorizedResponse } from '@/lib/admin-auth'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
+import { FEST_STATUS, paymentsAreClosed } from '@/lib/fest-status'
 
 type Body = {
   eventId?: string
@@ -27,6 +28,10 @@ function isAllowedReturnUrl(raw: string | undefined): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  if (paymentsAreClosed()) {
+    return NextResponse.json({ error: FEST_STATUS.paymentsClosedMessage }, { status: 403 })
+  }
+
   const userId = await getAuthenticatedUserId(request)
   if (!userId) return unauthorizedResponse()
 
