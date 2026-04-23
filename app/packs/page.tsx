@@ -8,6 +8,7 @@ import { Footer } from '@/components/footer'
 import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { ArrowLeft, Package, Tag, BadgeCheck } from 'lucide-react'
 import type { PublicBundle } from '@/app/api/bundles/route'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 export default function PacksPage() {
   const [bundles, setBundles] = useState<PublicBundle[]>([])
@@ -61,8 +62,16 @@ export default function PacksPage() {
               Packs & Bundles
             </h1>
             <p className="text-foreground/70 text-lg">
-              Save more by registering for multiple events together. Choose a pack that fits you.
+              {FEST_STATUS.isOver
+                ? 'Packs are now shown as archive/reference after the fest.'
+                : 'Save more by registering for multiple events together. Choose a pack that fits you.'}
             </p>
+            {FEST_STATUS.isOver && (
+              <div className="mt-4 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 max-w-3xl">
+                <p className="text-accent font-semibold">{FEST_STATUS.successTitle}</p>
+                <p className="text-sm text-foreground/80 mt-1">{FEST_STATUS.paymentsClosedMessage}</p>
+              </div>
+            )}
           </motion.div>
 
           {error ? (
@@ -109,6 +118,11 @@ export default function PacksPage() {
                     <div className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-accent/20 text-accent font-medium border border-accent/40">
                       <BadgeCheck size={18} />
                       Already purchased
+                    </div>
+                  ) : FEST_STATUS.isOver ? (
+                    <div className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-secondary text-foreground/70 font-medium border border-border cursor-not-allowed">
+                      <Tag size={18} />
+                      Purchases closed
                     </div>
                   ) : (
                     <Link

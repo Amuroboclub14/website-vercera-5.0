@@ -12,6 +12,7 @@ import { formatPrizeAmount } from '@/lib/format-prize'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { QRCodeSVG } from 'qrcode.react'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -455,6 +456,12 @@ export default function EventDetailPage({ params }: Props) {
                     {event.category === 'technical' ? 'Technical' : 'Non-Technical'}
                   </span>
                 </div>
+                {FEST_STATUS.isOver && (
+                  <div className="rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+                    <p className="text-accent font-semibold">{FEST_STATUS.successTitle}</p>
+                    <p className="text-sm text-foreground/80 mt-1">{FEST_STATUS.paymentsClosedMessage}</p>
+                  </div>
+                )}
               </div>
 
               {/* Event Image */}
@@ -703,6 +710,10 @@ export default function EventDetailPage({ params }: Props) {
                         <BadgeCheck size={18} />
                         Registered
                       </button>
+                    ) : FEST_STATUS.isOver ? (
+                      <button disabled className="w-full px-6 py-3 bg-muted text-muted-foreground rounded-full font-bold cursor-not-allowed">
+                        Registration Closed
+                      </button>
                     ) : spotsAvailable > 0 ? eligibleFromPack ? (
                       <div className="space-y-1.5">
                         <button
@@ -946,7 +957,9 @@ export default function EventDetailPage({ params }: Props) {
                     <span className="font-semibold">Note:</span> You need to be logged in to register for this event.
                   </p>
                   <p className="text-foreground/60">
-                    After registration, you'll proceed to secure payment via Razorpay.
+                    {FEST_STATUS.isOver
+                      ? FEST_STATUS.paymentsClosedMessage
+                      : "After registration, you'll proceed to secure payment via Razorpay."}
                   </p>
                 </div>
 
