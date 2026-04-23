@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { FEST_STATUS } from '@/lib/fest-status'
 export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -19,6 +20,18 @@ export function Hero() {
           >
             17-21 April
           </motion.p>
+
+          {FEST_STATUS.isOver && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="pointer-events-auto mx-auto max-w-3xl rounded-2xl border border-accent/40 bg-accent/10 px-5 py-4"
+            >
+              <p className="text-accent font-semibold">{FEST_STATUS.successTitle}</p>
+              <p className="text-sm text-foreground/80 mt-1">{FEST_STATUS.successMessage}</p>
+            </motion.div>
+          )}
 
           {/* Organized By */}
           <motion.div
@@ -126,7 +139,7 @@ export function Hero() {
                 href="/signup"
                 className="inline-flex items-center justify-center px-8 py-4 border border-border/50 bg-background/50 backdrop-blur-md text-foreground rounded-full font-medium hover:bg-secondary/50 transition-all"
               >
-                Register Now
+                {FEST_STATUS.isOver ? 'Fest wrapped successfully' : 'Register Now'}
               </Link>
             </motion.div>
           </motion.div>

@@ -16,6 +16,7 @@ import { ArrowLeft, Users, Trophy, Clock, MapPin, BadgeCheck, Package, X, Check,
 import { formatPrizeAmount } from '@/lib/format-prize'
 import { PackTierCard } from '@/components/pack-tier-card'
 import { FlagshipEventCard } from '@/components/flagship-event-card'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 type Bundle = { id: string; name: string; type: string; price: number; originalPrice?: number; description?: string; perks?: string[]; highlight?: boolean }
 type PackEvent = { eventId: string; eventName: string }
@@ -170,6 +171,12 @@ export default function EventsPage() {
               All Events
             </h1>
             <p className="text-foreground/70 text-lg">Explore our complete catalog of technical and non-technical events at Vercera 5.0</p>
+            {FEST_STATUS.isOver && (
+              <div className="mt-5 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3">
+                <p className="text-accent font-semibold">{FEST_STATUS.successTitle}</p>
+                <p className="text-sm text-foreground/80 mt-1">{FEST_STATUS.paymentsClosedMessage}</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Packs - responsive grid, highlighted first */}
@@ -185,7 +192,11 @@ export default function EventsPage() {
                   <Package className="h-7 w-7 text-accent" />
                   Packs &amp; Bundles
                 </h2>
-                <p className="text-foreground/60 text-sm mt-1">Buy a pack to get multiple events at a discount. After payment, add the events you want to your profile.</p>
+                <p className="text-foreground/60 text-sm mt-1">
+                  {FEST_STATUS.isOver
+                    ? 'Packs remain visible for archive/reference. New purchases are disabled.'
+                    : 'Buy a pack to get multiple events at a discount. After payment, add the events you want to your profile.'}
+                </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
                 {packsOrdered.map((b) => (
@@ -201,19 +212,30 @@ export default function EventsPage() {
             </motion.div>
           )}
 
-          {/* How it works — clear guidance */}
+          {/* Registration guidance */}
           <div className="mb-8 rounded-xl border border-border bg-card/80 px-4 py-4 sm:px-6 sm:py-5">
-            <h3 className="font-semibold text-foreground text-sm sm:text-base mb-2">How to register</h3>
-            <ul className="text-sm text-foreground/85 space-y-1.5">
-              <li className="flex items-start gap-2">
-                <span className="text-accent font-bold">1.</span>
-                <span><strong className="text-foreground">Buy a pack</strong> (above) — Get multiple events at a discount. After payment, add the events you want to your profile from this page or your dashboard.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-accent font-bold">2.</span>
-                <span><strong className="text-foreground">Or register for one event</strong> — Click &quot;Register for this event&quot; on any event below to pay and register for that event only.</span>
-              </li>
-            </ul>
+            {FEST_STATUS.isOver ? (
+              <>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-2">Fest completed</h3>
+                <p className="text-sm text-foreground/85">
+                  Event and pack registrations are now closed. You can still browse events, prizes, and details as an archive.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-2">How to register</h3>
+                <ul className="text-sm text-foreground/85 space-y-1.5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent font-bold">1.</span>
+                    <span><strong className="text-foreground">Buy a pack</strong> (above) — Get multiple events at a discount. After payment, add the events you want to your profile from this page or your dashboard.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-accent font-bold">2.</span>
+                    <span><strong className="text-foreground">Or register for one event</strong> — Click &quot;Register for this event&quot; on any event below to pay and register for that event only.</span>
+                  </li>
+                </ul>
+              </>
+            )}
           </div>
 
           {/* Pack purchase instructions — show when user has purchased a bundle */}
@@ -374,6 +396,13 @@ export default function EventsPage() {
                           >
                             {addingEventId === event.id ? 'Adding…' : 'Add to my events'}
                           </button>
+                        ) : FEST_STATUS.isOver ? (
+                          <span
+                            className="px-4 py-2 bg-secondary text-foreground/70 rounded-lg font-semibold text-sm cursor-not-allowed"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Registration closed
+                          </span>
                         ) : (
                           <Link
                             href={`/checkout/${event.id}`}
@@ -448,6 +477,10 @@ export default function EventsPage() {
               {purchasedBundleIds.has(packModal.id) ? (
                 <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 text-accent rounded-full font-semibold">
                   <BadgeCheck size={18} /> Purchased
+                </span>
+              ) : FEST_STATUS.isOver ? (
+                <span className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-foreground/70 rounded-full font-semibold cursor-not-allowed">
+                  <Package size={18} /> Purchases closed
                 </span>
               ) : (
                 <Link

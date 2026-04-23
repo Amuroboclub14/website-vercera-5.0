@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Clock, MapPin, Trophy, Users, BadgeCheck, Sparkles, ExternalLink } from 'lucide-react'
 import { formatPrizeAmount } from '@/lib/format-prize'
 import type { EventRecord } from '@/lib/events-types'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 interface FlagshipEventCardProps {
   event: EventRecord
@@ -148,6 +149,13 @@ export function FlagshipEventCard({
                 >
                   {addingEventId === event.id ? 'Adding…' : 'Add to my events'}
                 </button>
+              ) : FEST_STATUS.isOver ? (
+                <span
+                  className="px-5 py-2.5 bg-secondary text-foreground/70 rounded-xl font-semibold text-sm cursor-not-allowed inline-flex items-center justify-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Registration closed
+                </span>
               ) : (
                 <Link
                   href={`/checkout/${event.id}`}

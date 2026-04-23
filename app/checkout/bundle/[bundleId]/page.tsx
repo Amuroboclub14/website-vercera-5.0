@@ -8,6 +8,7 @@ import { Navbar } from '@/components/animated-navbar'
 import { Footer } from '@/components/footer'
 import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { ArrowLeft, AlertCircle, CheckCircle, BadgeCheck, Pin } from 'lucide-react'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 interface Props {
   params: Promise<{ bundleId: string }>
@@ -114,6 +115,29 @@ export default function BundleCheckoutPage({ params }: Props) {
             <Link href="/packs" className="text-accent hover:text-accent/80">
               Back to Packs
             </Link>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
+
+  if (FEST_STATUS.isOver) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-32 pb-20 flex items-center justify-center">
+          <div className="text-center max-w-xl px-4">
+            <h1 className="font-display text-3xl font-bold text-foreground mb-3">{FEST_STATUS.successTitle}</h1>
+            <p className="text-foreground/70 mb-6">{FEST_STATUS.paymentsClosedMessage}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link href="/packs" className="px-5 py-2.5 rounded-full bg-accent text-accent-foreground font-medium">
+                Back to packs
+              </Link>
+              <Link href="/events" className="px-5 py-2.5 rounded-full bg-secondary text-foreground font-medium">
+                Browse events
+              </Link>
+            </div>
           </div>
         </div>
         <Footer />

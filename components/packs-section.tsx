@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useMyRegistrations } from '@/hooks/use-my-registrations'
 import { PackTierCard, type PackTierBundle } from '@/components/pack-tier-card'
+import { FEST_STATUS } from '@/lib/fest-status'
 
 export function PacksSection() {
   const [bundles, setBundles] = useState<PackTierBundle[]>([])
@@ -47,7 +48,9 @@ export function PacksSection() {
             Packs &amp; <span className="text-accent">Bundles</span>
           </h2>
           <p className="text-white/85 text-lg max-w-2xl mx-auto">
-            Buy a pack for multiple events at a discount. After payment, add the events you want to your profile from the Events page or your dashboard.
+            {FEST_STATUS.isOver
+              ? 'Vercera 5.0 packs are now shown as archive highlights from a successful fest.'
+              : 'Buy a pack for multiple events at a discount. After payment, add the events you want to your profile from the Events page or your dashboard.'}
           </p>
         </motion.div>
         <motion.div
@@ -67,7 +70,9 @@ export function PacksSection() {
           ))}
         </motion.div>
         <p className="text-center text-foreground/50 text-sm mt-8 sm:mt-10 max-w-xl mx-auto">
-          Pay once. Add events from your dashboard anytime. We don&apos;t store or sell your data.
+          {FEST_STATUS.isOver
+            ? FEST_STATUS.paymentsClosedMessage
+            : "Pay once. Add events from your dashboard anytime. We don't store or sell your data."}
         </p>
       </div>
     </section>
