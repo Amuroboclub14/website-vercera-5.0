@@ -26,10 +26,15 @@ export async function GET(
     }
     const regsSnap = await db.collection('registrations').where('eventId', '==', id).get()
     const d = doc.data()!
+    const participantCountOffset = Number(d.participantCountOffset ?? 0) || 0
+    const realRegisteredCount = regsSnap.size
+    const registeredCount = Math.max(0, realRegisteredCount + participantCountOffset)
     return NextResponse.json({
       id: doc.id,
       ...d,
-      registeredCount: regsSnap.size,
+      realRegisteredCount,
+      participantCountOffset,
+      registeredCount,
     })
   } catch (err) {
     console.error('Admin get event error:', err)
@@ -75,6 +80,7 @@ export async function PUT(
       flagship,
       flagshipSponsor,
       specialCategoryAward,
+      participantCountOffset,
     } = body
 
     const db = getVerceraFirestore()
@@ -124,6 +130,7 @@ export async function PUT(
       data.excludedFromTechnicalBundle = FieldValue.delete()
     }
     if (includedInNonTechnicalBundle !== undefined) data.includedInNonTechnicalBundle = Boolean(includedInNonTechnicalBundle)
+    if (participantCountOffset !== undefined) data.participantCountOffset = Number(participantCountOffset) || 0
     if (flagship !== undefined) data.flagship = Boolean(flagship)
     if (flagshipSponsor !== undefined) {
       if (flagshipSponsor && typeof flagshipSponsor === 'object') {

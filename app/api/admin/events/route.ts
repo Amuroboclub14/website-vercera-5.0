@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
       flagship,
       flagshipSponsor,
       specialCategoryAward,
+      participantCountOffset,
     } = body;
 
     if (!name || !category) {
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest) {
         excludedFromBundles ?? excludedFromTechnicalBundle,
       ),
       includedInNonTechnicalBundle: Boolean(includedInNonTechnicalBundle),
+      participantCountOffset: Number(participantCountOffset ?? 0) || 0,
       flagship: Boolean(flagship),
       createdAt: now,
       updatedAt: now,

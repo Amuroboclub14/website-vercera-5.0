@@ -27,6 +27,9 @@ export async function GET(
 
     const regsSnap = await db.collection('registrations').where('eventId', '==', id).get()
     const d = doc.data()!
+    const realRegisteredCount = regsSnap.size
+    const participantCountOffset = Number(d.participantCountOffset ?? 0) || 0
+    const registeredCount = Math.max(0, realRegisteredCount + participantCountOffset)
     const eventImages = Array.isArray(d.eventImages) ? d.eventImages : []
     const image = eventImages[0] ?? d.image ?? ''
     const rulebookUrls = Array.isArray(d.rulebookUrls) ? d.rulebookUrls : []
@@ -45,7 +48,9 @@ export async function GET(
       registrationFee: Number(d.registrationFee) ?? 0,
       prizePool: Number(d.prizePool) ?? 0,
       maxParticipants: Number(d.maxParticipants) ?? 0,
-      registeredCount: regsSnap.size,
+      registeredCount,
+      realRegisteredCount,
+      participantCountOffset,
       rules: Array.isArray(d.rules) ? d.rules : [],
       prizes: Array.isArray(d.prizes) ? d.prizes : [],
       isTeamEvent: Boolean(d.isTeamEvent),
