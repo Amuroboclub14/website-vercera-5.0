@@ -7,7 +7,6 @@ import { useAdminFetch } from '@/hooks/use-admin-fetch'
 import {
   Users,
   ListChecks,
-  Receipt,
   Wallet,
   CheckCircle,
   TrendingUp,
@@ -37,8 +36,7 @@ interface Stats {
   /** Distinct participants who purchased at least one bundle (pack tx, amount > 0). */
   distinctBundleBuyers: number
   attendedCount: number
-  totalRevenue: number
-  eventWise: Record<string, { count: number; revenue: number; attended: number }>
+  eventWise: Record<string, { count: number; attended: number }>
   eventNames?: Record<string, string>
   recentRegistrations: Array<{
     id: string
@@ -117,12 +115,6 @@ export default function AdminDashboardPage() {
       href: '/admin/bundles',
     },
     {
-      label: 'Total Revenue',
-      value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
-      icon: Receipt,
-      href: '/admin/transactions',
-    },
-    {
       label: 'Attendance Marked',
       value: stats.attendedCount,
       icon: CheckCircle,
@@ -141,7 +133,7 @@ export default function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className="text-foreground/60 mt-1 text-sm sm:text-base">
-          Overview of Vercera 5.0 registrations and revenue
+          Overview of Vercera 5.0 participation and registrations
         </p>
       </div>
 
@@ -187,7 +179,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 flex flex-col min-h-0">
           <h2 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2 flex-shrink-0">
             <Calendar className="h-4 w-4 shrink-0" />
-            Revenue by Event
+            Registrations by Event
           </h2>
           <div className="mt-3 sm:mt-4 flex-1 min-h-0 max-h-48 sm:max-h-64 flex flex-col overflow-hidden">
             <div
@@ -208,7 +200,7 @@ export default function AdminDashboardPage() {
                       {stats.eventNames?.[eventId] ?? eventId}
                     </span>
                     <span className="text-accent font-medium">
-                      ₹{data.revenue.toLocaleString('en-IN')} ({data.count})
+                      {data.count}
                     </span>
                   </div>
                 ))
@@ -242,7 +234,7 @@ export default function AdminDashboardPage() {
                         {r.eventName || r.eventId || '—'}
                       </p>
                       <p className="text-foreground/50 text-xs">
-                        {r.status} · ₹{Number(r.amount || 0).toLocaleString('en-IN')}
+                        {r.status || '—'}
                       </p>
                     </div>
                     <Link

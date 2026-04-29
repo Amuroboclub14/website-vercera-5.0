@@ -22,7 +22,6 @@ import type { EventRecord } from '@/lib/events-types'
 
 interface EventStats {
   count: number
-  revenue: number
   attended: number
 }
 
@@ -50,6 +49,7 @@ const defaultEvent: Partial<EventRecord> = {
   excludedFromBundles: false,
   includedInNonTechnicalBundle: false,
   flagship: false,
+  participantCountOffset: 0,
   flagshipSponsor: {
     name: '',
     logoUrl: '',
@@ -163,6 +163,9 @@ export default function AdminEventsPage() {
       registrationFee: data.registrationFee,
       prizePool: data.prizePool,
       maxParticipants: data.maxParticipants,
+      realRegisteredCount: Number(data.realRegisteredCount ?? data.registeredCount ?? 0) || 0,
+      registeredCount: Number(data.registeredCount ?? 0) || 0,
+      participantCountOffset: Number(data.participantCountOffset ?? 0) || 0,
       rules: data.rules || [],
       prizes: (data.prizes?.length) ? data.prizes : [{ position: '1st Prize', amount: 0 }],
       isTeamEvent: data.isTeamEvent,
@@ -457,7 +460,7 @@ export default function AdminEventsPage() {
       ) : (
         <div className="grid gap-3 sm:gap-4">
           {events.map((event) => {
-            const stats = eventWise[event.id] || { count: 0, revenue: 0, attended: 0 }
+            const stats = eventWise[event.id] || { count: 0, attended: 0 }
             return (
               <div
                 key={event.id}
@@ -469,15 +472,15 @@ export default function AdminEventsPage() {
                     {event.category} · Max {event.maxParticipants} · Fee ₹{event.registrationFee}
                     {(event.rulebookUrls?.length || event.rulebookUrl) ? ' · Rulebook' : ''}
                   </p>
+                  <p className="text-xs text-foreground/50 mt-0.5">
+                    Display participants: {event.registeredCount ?? stats.count}
+                    {(event.participantCountOffset ?? 0) !== 0 ? ` (includes offset ${event.participantCountOffset! > 0 ? '+' : ''}${event.participantCountOffset})` : ''}
+                  </p>
                 </div>
                 <div className="flex gap-4 sm:gap-6 text-sm flex-wrap">
                   <div>
                     <p className="text-foreground/50 text-xs">Registrations</p>
                     <p className="font-semibold text-foreground">{stats.count}</p>
-                  </div>
-                  <div>
-                    <p className="text-foreground/50 text-xs">Revenue</p>
-                    <p className="font-semibold text-accent">₹{stats.revenue?.toLocaleString('en-IN') ?? 0}</p>
                   </div>
                   <div>
                     <p className="text-foreground/50 text-xs">Attended</p>
@@ -700,6 +703,38 @@ export default function AdminEventsPage() {
                     />
                   </div>
                 </div>
+
+                {editingId && (
+                  <div className="rounded-lg border border-border bg-secondary/20 p-3 space-y-2">
+                    <p className="text-sm font-medium text-foreground/85">Participant count adjustment</p>
+                    <p className="text-xs text-foreground/60">
+                      Use this only for manual correction of displayed participant count. It applies a +/- offset on top of real registrations.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-foreground/60 mb-1">Real registrations</label>
+                        <div className="px-3 py-2 rounded-lg border border-border bg-background text-sm text-foreground">
+                          {Number(form.realRegisteredCount ?? 0)}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-foreground/60 mb-1">Offset (+/-)</label>
+                        <input
+                          type="number"
+                          value={Number(form.participantCountOffset ?? 0)}
+                          onChange={(e) => updateForm('participantCountOffset', Number(e.target.value) || 0)}
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-foreground/60 mb-1">Displayed count</label>
+                        <div className="px-3 py-2 rounded-lg border border-border bg-background text-sm font-semibold text-accent">
+                          {Math.max(0, Number(form.realRegisteredCount ?? 0) + Number(form.participantCountOffset ?? 0))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 text-sm text-foreground/80">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
 import { getVerceraFirestore } from '@/lib/firebase-admin'
 import { requireAdminLevel } from '@/lib/admin-auth'
+import { dedupeRegistrationsByUserEventTeam } from '@/lib/dedupe-registrations'
 
 const ALLOWED_LEVELS = ['owner', 'super_admin'] as const
 const cleanString = (v: unknown): string | null => {
@@ -24,12 +25,25 @@ export async function GET(
     if (!doc.exists) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
-    const regsSnap = await db.collection('registrations').where('eventId', '==', id).get()
+    const [regsSnap, participantsSnap] = await Promise.all([
+      db.collection('registrations').where('eventId', '==', id).get(),
+      db.collection('vercera_5_participants').get(),
+    ])
+    const activeParticipantIds = new Set(participantsSnap.docs.map((d) => d.id))
     const d = doc.data()!
+    const participantCountOffset = Number(d.participantCountOffset ?? 0) || 0
+    const realRegisteredCount = dedupeRegistrationsByUserEventTeam(
+      regsSnap.docs
+        .map((x) => ({ id: x.id, ...(x.data() as { userId?: string; eventId?: string; teamId?: string; verceraTeamId?: string; createdAt?: string }) }))
+        .filter((r) => r.userId && activeParticipantIds.has(r.userId))
+    ).length
+    const registeredCount = Math.max(0, realRegisteredCount + participantCountOffset)
     return NextResponse.json({
       id: doc.id,
       ...d,
-      registeredCount: regsSnap.size,
+      realRegisteredCount,
+      participantCountOffset,
+      registeredCount,
     })
   } catch (err) {
     console.error('Admin get event error:', err)
@@ -75,6 +89,7 @@ export async function PUT(
       flagship,
       flagshipSponsor,
       specialCategoryAward,
+      participantCountOffset,
     } = body
 
     const db = getVerceraFirestore()
@@ -124,6 +139,7 @@ export async function PUT(
       data.excludedFromTechnicalBundle = FieldValue.delete()
     }
     if (includedInNonTechnicalBundle !== undefined) data.includedInNonTechnicalBundle = Boolean(includedInNonTechnicalBundle)
+    if (participantCountOffset !== undefined) data.participantCountOffset = Number(participantCountOffset) || 0
     if (flagship !== undefined) data.flagship = Boolean(flagship)
     if (flagshipSponsor !== undefined) {
       if (flagshipSponsor && typeof flagshipSponsor === 'object') {

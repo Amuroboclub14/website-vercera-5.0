@@ -14,6 +14,10 @@ export interface EventRecord {
   prizePool: number
   maxParticipants: number
   registeredCount?: number // computed when serving, not stored in Firestore
+  /** Raw registration-doc count (admin helpers). */
+  realRegisteredCount?: number
+  /** Manual +/- adjustment applied on top of real registrations for display. */
+  participantCountOffset?: number
   rules: string[]
   prizes: { position: string; amount: number }[]
   isTeamEvent?: boolean

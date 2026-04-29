@@ -70,17 +70,17 @@ export async function GET(request: NextRequest) {
     const paidCount = registrationsActive.filter((r) => r.status === 'paid' || r.status === 'completed').length
     const attendedCount = registrationsActive.filter((r) => r.attended === true).length
 
-    const eventWise: Record<string, { count: number; revenue: number; attended: number }> = {}
+    const eventWiseRaw: Record<string, { count: number; revenue: number; attended: number }> = {}
     for (const r of registrationsActive) {
       const eid = r.eventId || 'unknown'
-      if (!eventWise[eid]) eventWise[eid] = { count: 0, revenue: 0, attended: 0 }
-      eventWise[eid].count += 1
-      if (r.attended) eventWise[eid].attended += 1
+      if (!eventWiseRaw[eid]) eventWiseRaw[eid] = { count: 0, revenue: 0, attended: 0 }
+      eventWiseRaw[eid].count += 1
+      if (r.attended) eventWiseRaw[eid].attended += 1
     }
     for (const t of transactionsActiveUser) {
       if (t.type === 'event' && t.eventId) {
-        if (!eventWise[t.eventId]) eventWise[t.eventId] = { count: 0, revenue: 0, attended: 0 }
-        eventWise[t.eventId].revenue += Number(t.amount) || 0
+        if (!eventWiseRaw[t.eventId]) eventWiseRaw[t.eventId] = { count: 0, revenue: 0, attended: 0 }
+        eventWiseRaw[t.eventId].revenue += Number(t.amount) || 0
       }
     }
 
@@ -90,10 +90,22 @@ export async function GET(request: NextRequest) {
 
     const eventsSnap = await db.collection('events').get()
     const eventNames: Record<string, string> = {}
+    const participantOffsetByEvent: Record<string, number> = {}
     eventsSnap.docs.forEach((doc) => {
-      const name = (doc.data() as { name?: string }).name
+      const d = doc.data() as { name?: string; participantCountOffset?: number }
+      const name = d.name
       eventNames[doc.id] = name ?? doc.id
+      participantOffsetByEvent[doc.id] = Number(d.participantCountOffset ?? 0) || 0
     })
+    const eventWise: Record<string, { count: number; revenue: number; attended: number }> = {}
+    for (const [eventId, data] of Object.entries(eventWiseRaw)) {
+      const offset = participantOffsetByEvent[eventId] ?? 0
+      eventWise[eventId] = {
+        ...data,
+        // Apply manual participant offset to displayed count in dashboard widgets/charts.
+        count: Math.max(0, data.count + offset),
+      }
+    }
 
     const packTransactions = transactions.filter(
       (t) => t.type === 'pack' && t.userId && activeParticipantIds.has(t.userId)
