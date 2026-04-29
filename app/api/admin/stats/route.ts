@@ -51,9 +51,6 @@ export async function GET(request: NextRequest) {
     const transactionsActiveUser = transactions.filter(
       (t) => t.userId && activeParticipantIds.has(t.userId)
     )
-    const totalRevenue =
-      Math.round(transactionsActiveUser.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) * 100) /
-      100
 
     /** Distinct users who still have a profile and have at least one payment transaction (pack or event). */
     const payingUserIdsActive = new Set<string>()
@@ -70,18 +67,12 @@ export async function GET(request: NextRequest) {
     const paidCount = registrationsActive.filter((r) => r.status === 'paid' || r.status === 'completed').length
     const attendedCount = registrationsActive.filter((r) => r.attended === true).length
 
-    const eventWise: Record<string, { count: number; revenue: number; attended: number }> = {}
+    const eventWise: Record<string, { count: number; attended: number }> = {}
     for (const r of registrationsActive) {
       const eid = r.eventId || 'unknown'
-      if (!eventWise[eid]) eventWise[eid] = { count: 0, revenue: 0, attended: 0 }
+      if (!eventWise[eid]) eventWise[eid] = { count: 0, attended: 0 }
       eventWise[eid].count += 1
       if (r.attended) eventWise[eid].attended += 1
-    }
-    for (const t of transactionsActiveUser) {
-      if (t.type === 'event' && t.eventId) {
-        if (!eventWise[t.eventId]) eventWise[t.eventId] = { count: 0, revenue: 0, attended: 0 }
-        eventWise[t.eventId].revenue += Number(t.amount) || 0
-      }
     }
 
     const recentRegistrations = registrationsActive
@@ -157,7 +148,6 @@ export async function GET(request: NextRequest) {
       distinctPayingParticipants,
       distinctBundleBuyers,
       attendedCount,
-      totalRevenue,
       eventWise,
       eventNames,
       recentRegistrations,
